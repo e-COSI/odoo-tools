@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <record model="ir.ui.view" id="module_install_source_view">
+            <field name="name">module_install.source.form</field>
+            <field name="model">module_install.source</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="source_type" />
+                            </group>
+                            <group>
+                                <field name="token" />
+                                <field name="branch" />
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record model="ir.actions.act_window" id="module_install_action">
+            <field name="name">Sources</field>
+            <field name="res_model">module_install.source</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="main_module_install_menu" name="Install Module" />
+        <menuitem id="module_install_menu" name="Install Module"
+            parent="main_module_install_menu" />
+        <menuitem id="source_menu" name="Source"
+            parent="module_install_menu" action="module_install_action" />
+
+    </data>
+</odoo>
