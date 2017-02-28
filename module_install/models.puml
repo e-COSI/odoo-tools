@@ -1,0 +1,58 @@
+@startuml
+
+package ir {
+  class Module {
+
+  }
+
+}
+
+package module_installer {
+  class Setting #orange {
+    addons_path : Char
+
+  }
+  class Source #orange {
+    name : Char
+  }
+
+  class Version #yellow {
+    branch : Char
+    tag : Char
+  }
+
+  class Historique #yellow {
+      date_installed : Date
+      comment : Text
+  }
+
+  class GitSource #orange {
+    repo : Char
+    token : Char
+    subdir : Char
+  }
+
+  class SftpSource #cyan {
+    host : Char
+    port : Integer
+    username : Char
+    encrypted_password : Char
+
+  }
+
+  class ZipSource #cyan {
+    filename : Char
+  }
+
+  Source <|-down- GitSource
+  Source <|-down- SftpSource
+  Source <|-down- ZipSource
+  Version-left->Source
+  Historique-right->Version
+}
+
+  Module-Source : "source _id"
+  Module->Version
+  Module->Historique
+
+@enduml
