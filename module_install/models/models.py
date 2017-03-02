@@ -2,12 +2,15 @@
 
 from odoo import models, fields, api
 
+import logging
 from subprocess import call
 from os import listdir
 from os.path import isfile, join, exists
 from ast import literal_eval
 from shutil import copytree
 
+
+_logger = logging.getLogger(__name__)
 
 class GithubSource(models.Model):
     _name = "module_install.github_source"
@@ -29,7 +32,7 @@ class GithubSource(models.Model):
         cmd = "git clone https://{0}@{1} -b {2} /tmp/{3}" \
             .format(self.token, repo_url, self.branch, folder_id)
         if call(cmd, shell=True) == 0:
-            print "Module installed succesfully"
+            _logger.info(self.repository_name + " has been successfully cloned")
             return folder_id
         return ""
 
@@ -55,7 +58,7 @@ class Source(models.Model):
         elif self.source_id == 'S':
             pass
         if folder_id:
-            self.check_module("/tmp", folder_id, True)
+            self._check_module("/tmp", folder_id, True)
         return {
             'type': 'ir.actions.act_window',
             'name': "Source modules",
