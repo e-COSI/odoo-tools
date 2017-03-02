@@ -4,13 +4,20 @@ from odoo import models, fields, api
 
 import logging
 from subprocess import call
-from os import listdir
+import os
 from os.path import isfile, join, exists
 from ast import literal_eval
-from shutil import copytree
+from shutil import copytree, rmtree
 
 
 _logger = logging.getLogger(__name__)
+
+def clear_folder(folder_path):
+    if exists(folder_path):
+        if isfile(folder_path):
+            os.remove(folder_path)
+        else:
+            rmtree(folder_path)
 
 class GithubSource(models.Model):
     _name = "module_install.github_source"
@@ -28,9 +35,11 @@ class GithubSource(models.Model):
         repo_url = "github.com/{0}/{1}.git".format(self.repository_owner, self.repository_name)
         folder_id = "{0}_{1}_{2}_{3}" \
             .format(self.repository_owner, self.repository_name, self.branch, self.tag)
-        # TO DO: raise a warning if source has already been fetched
-        cmd = "git clone https://{0}@{1} -b {2} /tmp/{3}" \
-            .format(self.token, repo_url, self.branch, folder_id)
+        temp_folder = "/tmp/" + folder_id
+        # If destination folder already exists delete it and clone again repository
+        clear_folder(temp_folder)
+        cmd = "git clone https://{0}@{1} -b {2} {3}" \
+            .format(self.token, repo_url, self.branch, temp_folder)
         if call(cmd, shell=True) == 0:
             _logger.info(self.repository_name + " has been successfully cloned")
             return folder_id
@@ -70,36 +79,48 @@ class Source(models.Model):
     def _check_module(self, root_path, folder_id, rec=False):
         path = join(root_path, folder_id)
         if not isfile(path):
-            for f in listdir(path):
+            for f in os.listdir(path):
                 filepath = join(path, f)
                 if f == "__manifest__.py":
                     datafile = open(filepath, 'r').read()
                     data = literal_eval(datafile)
-                    # TO DO: check if corresponding wizard already exists
-                    self.env["module_install.wizard"].create({
+                    values = {
                         'source': self.id,
                         'module_name': folder_id,
                         'folder_path': path
-                        })
+                    }
+                    records = self.env["module_install.wizard"].search([
+                        ('folder_path', '=', path),
+                    ])
+                    _logger.warning(str(len(records)) + " modules found")
+                    if len(records) == 0:
+                        self.env["module_install.wizard"].create(values)
+                    else:
+                        records.ensure_one()
+                        records.write(values)
                     print "Module {} found".format(data["name"])
-                    return True
+                    #return True
                 if rec:
                     self._check_module(path, f)
-        return False
+        #return False
 
 
 class WizardModule(models.TransientModel):
     _name = "module_install.wizard"
 
-    source = fields.Many2one("module_install.source", required=True)
+    source = fields.Many2one("module_install.source", required=True, ondelete='cascade')
     module_name = fields.Char(string="module")
     folder_path = fields.Char()
 
     @api.multi
     def install_module(self):
-        if not self.folder_path or not exists(self.folder_path):
+        # Check if module tmp folder exists, regenerate its source otherwise
+        if not self.folder_path or not exists(self.folder_path) \
+            or isfile(self.folder_path) or not isfile(self.folder_path + "/__manifest__.py"):
             self.source.get_source()
-        copytree(self.folder_path, join("/opt/module_install", self.module_name))
+        dest = join("/opt/module_install", self.module_name)
+        clear_folder(dest)
+        copytree(self.folder_path, dest)
 
 
 

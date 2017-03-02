@@ -19,7 +19,7 @@
                                 <field name="repository_name" />
                                 <field name="branch" />
                                 <field name="tag" />
-                                <button string="Get Module" type="object" name="get_source"
+                                <button string="Find Modules" type="object" name="get_source"
                                    class="oe_read_only oe_stat_button" icon="fa-github" />
                             </group>
                         </group>
