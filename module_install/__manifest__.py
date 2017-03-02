@@ -7,10 +7,10 @@
      """,
 
     'description': """
-        Long description of module's purpose
+        Install tool use to fetch modules available via Github or SFTP and can also upload zipped module sources.
     """,
 
-    'author': "e-Cosi",
+    'author': "michael.yadaba@e-cosi.com",
     'website': "http://www.e-cosi.com",
 
     # Categories can be used to filter modules in modules listing

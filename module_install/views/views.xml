@@ -2,6 +2,7 @@
 <odoo>
     <data>
 
+        <!-- Source form -->
         <record model="ir.ui.view" id="module_install_source_view">
             <field name="name">module_install.source.form</field>
             <field name="model">module_install.source</field>
@@ -12,22 +13,50 @@
                             <group>
                                 <field name="source_type" />
                             </group>
-                            <group>
+                            <group attrs="{'invisible': [('source_type', '!=', 'G')]}">
                                 <field name="token" />
+                                <field name="repository_owner" />
+                                <field name="repository_name" />
                                 <field name="branch" />
+                                <field name="tag" />
+                                <button string="Get Module" type="object" name="get_source"
+                                   class="oe_read_only oe_stat_button" icon="fa-github" />
                             </group>
                         </group>
                     </sheet>
                 </form>
             </field>
         </record>
+
+        <!-- Wizard form -->
+        <record model="ir.ui.view" id="module_install_wizard_view">
+        <field name="name">module_install.wizard.form</field>
+        <field name="model">module_install.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="module_name" />
+                        </group>
+                        <group>
+                            <button string="Install" type="object" name="install_module"
+                                class="oe_read_only oe_stat_button" icon="fa-tasks" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+
+        </record>
+
+        <!-- Module main menu entry and treeview -->
         <record model="ir.actions.act_window" id="module_install_action">
             <field name="name">Sources</field>
             <field name="res_model">module_install.source</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
         </record>
-
         <menuitem id="main_module_install_menu" name="Install Module" />
         <menuitem id="module_install_menu" name="Install Module"
             parent="main_module_install_menu" />
