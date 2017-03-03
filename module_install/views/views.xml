@@ -28,6 +28,12 @@
                                 <button string="Unzip Modules" type="object" name="get_source"
                                    class="oe_read_only oe_stat_button" icon="fa-file-archive-o" />
                             </group>
+                            <group attrs="{'invisible': [('source_type', '!=', 'S')]}">
+                                <field name="username" />
+                                <field name="password" password="1" />
+                                <field name="url" />
+                                <field name="path" />
+                            </group>
                         </group>
                     </sheet>
                 </form>
@@ -38,7 +44,7 @@
         <record model="ir.ui.view" id="module_install_wizard_view">
         <field name="name">module_install.wizard.form</field>
         <field name="model">module_install.wizard</field>
-        <field name="arch" type="xml">
+        <field name="arch" type="xml" create="false" edit="false">
             <form>
                 <sheet>
                     <group>
