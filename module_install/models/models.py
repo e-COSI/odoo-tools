@@ -8,6 +8,8 @@ import os
 from os.path import isfile, join, exists
 from ast import literal_eval
 from shutil import copytree, rmtree
+from base64 import b64decode
+import zipfile
 
 
 _logger = logging.getLogger(__name__)
@@ -31,7 +33,7 @@ class GithubSource(models.Model):
     subdir = fields.Char()
 
     def _clone_github_repository(self):
-        # TO DO: raise a waring popup in case credentials are missing or invalid
+        # TO DO: raise a warning popup in case credentials are missing or invalid
         repo_url = "github.com/{0}/{1}.git".format(self.repository_owner, self.repository_name)
         folder_id = "{0}_{1}_{2}_{3}" \
             .format(self.repository_owner, self.repository_name, self.branch, self.tag)
@@ -46,9 +48,30 @@ class GithubSource(models.Model):
         return ""
 
 
+class ZipSource(models.Model):
+    _name = "module_install.zip_source"
+
+    zip_file = fields.Binary()
+    zip_filename = fields.Char()
+
+    def _unzip_file(self):
+        # TO DO: raise a warning if file is not set or invalid
+        if self.zip_file:
+            temp_zip = "/tmp/" + self.zip_filename
+            clear_folder(temp_zip)
+            with open(temp_zip, 'wb') as f:
+                f.write(b64decode(self.zip_file))
+            temp_folder = temp_zip.replace('.', '_')
+            clear_folder(temp_folder)
+            zip_ref = zipfile.ZipFile(temp_zip, 'r')
+            zip_ref.extractall(temp_folder)
+            return temp_folder
+        return ""
+
+
 class Source(models.Model):
     _name = "module_install.source"
-    _inherit = ["module_install.github_source",]
+    _inherit = ["module_install.github_source", "module_install.zip_source"]
 
     source_type = fields.Selection(selection=[
         ('G', "Github"),
@@ -62,9 +85,9 @@ class Source(models.Model):
         folder_id = ""
         if self.source_type == 'G':
             folder_id = self._clone_github_repository()
-        elif self.source_id == 'Z':
-            pass
-        elif self.source_id == 'S':
+        elif self.source_type == 'Z':
+            folder_id = self._unzip_file()
+        elif self.source_type == 'S':
             pass
         if folder_id:
             self._check_module("/tmp", folder_id, True)
@@ -74,6 +97,7 @@ class Source(models.Model):
             'view_type': 'form',
             'view_mode': 'tree,form',
             'res_model': 'module_install.wizard',
+            'domain': [('source', '=', self.id)],
         }
 
     def _check_module(self, root_path, folder_id, rec=False):
