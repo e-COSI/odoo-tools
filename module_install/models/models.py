@@ -9,7 +9,7 @@ from os.path import isfile, join, exists
 from ast import literal_eval
 from shutil import copytree, rmtree
 from base64 import b64decode
-import zipfile
+import zipfile, tarfile
 
 
 _logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class GithubSource(models.Model):
     tag = fields.Char(default="latest")
     subdir = fields.Char()
 
-    def _clone_github_repository(self):
+    def _clone_repository(self):
         # TO DO: raise a warning popup in case credentials are missing or invalid
         repo_url = "github.com/{0}/{1}.git".format(self.repository_owner, self.repository_name)
         folder_id = "{0}_{1}_{2}_{3}" \
@@ -63,15 +63,36 @@ class ZipSource(models.Model):
                 f.write(b64decode(self.zip_file))
             temp_folder = temp_zip.replace('.', '_')
             clear_folder(temp_folder)
-            zip_ref = zipfile.ZipFile(temp_zip, 'r')
-            zip_ref.extractall(temp_folder)
+            if zipfile.is_zipfile(temp_zip):
+                _logger.warning("Archive is a zip.")
+                zip_ref = zipfile.ZipFile(temp_zip, 'r')
+                zip_ref.extractall(temp_folder)
+            elif tarfile.is_tarfile(temp_zip):
+                _logger.warning("Archive is a tar.")
+                tar_ref = tarfile.open(temp_zip)
+                tar_ref.extractall(temp_folder)
+            else:
+                _logger.warning("Unrecognized compression file format.")
             return temp_folder
+        return ""
+
+
+class SFTPSource(models.Model):
+    _name = "module_install.sftp_source"
+
+    username = fields.Char()
+    password = fields.Char()
+    url = fields.Char()
+    path = fields.Char()
+
+    def _get_directory(self):
+        # TO DO: handle SFTP connexion and fetch modules
         return ""
 
 
 class Source(models.Model):
     _name = "module_install.source"
-    _inherit = ["module_install.github_source", "module_install.zip_source"]
+    _inherit = ["module_install.github_source", "module_install.zip_source", "module_install.sftp_source"]
 
     source_type = fields.Selection(selection=[
         ('G', "Github"),
@@ -84,23 +105,25 @@ class Source(models.Model):
         root_path = "/tmp"
         folder_id = ""
         if self.source_type == 'G':
-            folder_id = self._clone_github_repository()
+            folder_id = self._clone_repository()
         elif self.source_type == 'Z':
             folder_id = self._unzip_file()
         elif self.source_type == 'S':
-            pass
+            folder_id = self._get_directory()
         if folder_id:
-            self._check_module("/tmp", folder_id, True)
+            self._find_module("/tmp", folder_id, True)
+        #kanban_id = self.env.ref('module_install_wizard_view').id
         return {
             'type': 'ir.actions.act_window',
             'name': "Source modules",
             'view_type': 'form',
-            'view_mode': 'tree,form',
+            'view_mode': 'tree',
+            #'views': [(kanban_id, 'kanban')],
             'res_model': 'module_install.wizard',
             'domain': [('source', '=', self.id)],
         }
 
-    def _check_module(self, root_path, folder_id, rec=False):
+    def _find_module(self, root_path, folder_id, rec=False):
         path = join(root_path, folder_id)
         if not isfile(path):
             for f in os.listdir(path):
@@ -122,11 +145,9 @@ class Source(models.Model):
                     else:
                         records.ensure_one()
                         records.write(values)
-                    print "Module {} found".format(data["name"])
-                    #return True
+                    _logger.info("Module {} found".format(data["name"]))
                 if rec:
-                    self._check_module(path, f)
-        #return False
+                    self._find_module(path, f)
 
 
 class WizardModule(models.TransientModel):
@@ -138,13 +159,10 @@ class WizardModule(models.TransientModel):
 
     @api.multi
     def install_module(self):
-        # Check if module tmp folder exists, regenerate its source otherwise
+        # Checks if module tmp folder exists, regenerate its source otherwise
         if not self.folder_path or not exists(self.folder_path) \
             or isfile(self.folder_path) or not isfile(self.folder_path + "/__manifest__.py"):
             self.source.get_source()
         dest = join("/opt/module_install", self.module_name)
         clear_folder(dest)
         copytree(self.folder_path, dest)
-
-
-

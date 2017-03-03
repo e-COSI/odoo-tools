@@ -20,13 +20,13 @@
                                 <field name="branch" />
                                 <field name="tag" />
                                 <button string="Clone Modules" type="object" name="get_source"
-                                   class="oe_read_only oe_stat_button" icon="fa-github" />
+                                   class="oe_read_only oe_start_button" icon="fa-github" />
                             </group>
                             <group attrs="{'invisible': [('source_type', '!=', 'Z')]}">
                                 <field name="zip_filename" invisible="1" />
                                 <field name="zip_file" filename="zip_filename" />
                                 <button string="Unzip Modules" type="object" name="get_source"
-                                   class="oe_read_only oe_stat_button" icon="fa-file-archive-o" />
+                                   class="oe_read_only oe_start_button" icon="fa-file-archive-o" />
                             </group>
                             <group attrs="{'invisible': [('source_type', '!=', 'S')]}">
                                 <field name="username" />
@@ -41,28 +41,30 @@
         </record>
 
         <!-- Wizard form -->
-        <record model="ir.ui.view" id="module_install_wizard_view">
-        <field name="name">module_install.wizard.form</field>
-        <field name="model">module_install.wizard</field>
-        <field name="arch" type="xml" create="false" edit="false">
-            <form>
-                <sheet>
-                    <group>
-                        <group>
-                            <field name="module_name" />
-                        </group>
-                        <group>
-                            <button string="Install" type="object" name="install_module"
-                                class="oe_read_only oe_stat_button" icon="fa-tasks" />
-                        </group>
-                    </group>
-                </sheet>
-            </form>
-        </field>
+        <!--record model="ir.ui.view" id="module_install_wizard_view">
+            <field name="name">module_install.wizard.form</field>
+            <field name="model">module_install.wizard</field>
+            <field name="arch" type="xml" create="false" edit="false">
+                <tree>
+                    <field name="module_name" />
+                            class="oe_read_only oe_start_button" icon="fa-tasks" />
+                </tree>
+            </field>
+        </record-->
 
+        <record model="ir.ui.view" id="module_install_wizard_form">
+            <field name="name">module_install.wizard.form</field>
+            <field name="model">module_install.wizard</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="module_name" />
+                    <button string="Install" type="object" name="install_module"
+                            class="oe_read_only oe_start_button" icon="fa-tasks" />
+                </tree>
+            </field>
         </record>
 
-        <!-- Module main menu entry and treeview -->
+        <!-- Module main menu enty and treeview -->
         <record model="ir.actions.act_window" id="module_install_action">
             <field name="name">Sources</field>
             <field name="res_model">module_install.source</field>
