@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api
+from odoo.exceptions import UserError
 
 import logging
 from subprocess import call
@@ -76,7 +77,7 @@ class ZipSource(models.Model):
             return temp_folder
         return ""
 
-
+"""
 class SFTPSource(models.Model):
     _name = "module_install.sftp_source"
 
@@ -88,17 +89,21 @@ class SFTPSource(models.Model):
     def _get_directory(self):
         # TO DO: handle SFTP connexion and fetch modules
         return ""
-
+"""
 
 class Source(models.Model):
     _name = "module_install.source"
-    _inherit = ["module_install.github_source", "module_install.zip_source", "module_install.sftp_source"]
+    _inherit = ["module_install.github_source", "module_install.zip_source"]
 
+    source_name = fields.Char(required=True)
     source_type = fields.Selection(selection=[
         ('G', "Github"),
-        ('S', "SFTP"),
+        #('S', "SFTP"),
         ('Z', "Zip"),
-    ], string="Source type", default="G")
+    ], string="Source type", default="G", required=True)
+    source_install_folder = fields.Char(required=True)
+    module_ids = fields.One2many('module_install.wizard', 'source', string="Source modules")
+
 
     @api.multi
     def get_source(self):
@@ -108,24 +113,24 @@ class Source(models.Model):
             folder_id = self._clone_repository()
         elif self.source_type == 'Z':
             folder_id = self._unzip_file()
-        elif self.source_type == 'S':
-            folder_id = self._get_directory()
+        #elif self.source_type == 'S':
+        #    folder_id = self._get_directory()
         if folder_id:
             self._find_module("/tmp", folder_id, True)
         #kanban_id = self.env.ref('module_install_wizard_view').id
-        return {
-            'type': 'ir.actions.act_window',
-            'name': "Source modules",
-            'view_type': 'form',
-            'view_mode': 'tree',
-            #'views': [(kanban_id, 'kanban')],
-            'res_model': 'module_install.wizard',
-            'domain': [('source', '=', self.id)],
-        }
+        return
 
     def _find_module(self, root_path, folder_id, rec=False):
         path = join(root_path, folder_id)
         if not isfile(path):
+            module_model = self.env["module_install.wizard"]
+            """
+            old_modules = module_model.search(['source.id', '=', self.id])
+            for m in old_modules:
+                msg = "Clearing module {0} for source {1}".format(m, self.source_name)
+                _logger.warning(msg)
+                m.unlink()
+            """
             for f in os.listdir(path):
                 filepath = join(path, f)
                 if f == "__manifest__.py":
@@ -136,12 +141,12 @@ class Source(models.Model):
                         'module_name': folder_id,
                         'folder_path': path
                     }
-                    records = self.env["module_install.wizard"].search([
+                    records = module_model.search([
                         ('folder_path', '=', path),
                     ])
                     _logger.warning(str(len(records)) + " modules found")
                     if len(records) == 0:
-                        self.env["module_install.wizard"].create(values)
+                        module_model.create(values)
                     else:
                         records.ensure_one()
                         records.write(values)
@@ -163,6 +168,11 @@ class WizardModule(models.TransientModel):
         if not self.folder_path or not exists(self.folder_path) \
             or isfile(self.folder_path) or not isfile(self.folder_path + "/__manifest__.py"):
             self.source.get_source()
-        dest = join("/opt/module_install", self.module_name)
-        clear_folder(dest)
-        copytree(self.folder_path, dest)
+        try:
+            dest = join(self.source.source_install_folder, self.module_name)
+            _logger.info("Dest folder: " + dest)
+            clear_folder(dest)
+            copytree(self.folder_path, dest)
+        except Exception as e:
+            _logger.exception(e)
+            raise UserError(str(e))
