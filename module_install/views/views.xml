@@ -50,7 +50,7 @@
                             </group-->
                         </group>
                         <footer>
-                            <field name="module_ids" create="false" edit="false" />
+                            <field name="module_ids" />
                         </footer>
                     </sheet>
                 </form>
@@ -73,9 +73,9 @@
             <field name="name">module_install.wizard.form</field>
             <field name="model">module_install.wizard</field>
             <field name="arch" type="xml">
-                <tree>
+                <tree create="false" edit="false">
                     <field name="module_name" />
-                    <button string="Install" type="object" name="install_module"
+                    <button string="Install module" type="object" name="install_module"
                             class="oe_read_only oe_start_button" icon="fa-tasks" />
                 </tree>
             </field>

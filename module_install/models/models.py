@@ -109,7 +109,9 @@ class Source(models.Model):
     def get_source(self):
         root_path = "/tmp"
         folder_id = ""
-        if self.source_type == 'G':
+        if not self._check_fields():
+            pass
+        elif self.source_type == 'G':
             folder_id = self._clone_repository()
         elif self.source_type == 'Z':
             folder_id = self._unzip_file()
@@ -119,6 +121,21 @@ class Source(models.Model):
             self._find_module("/tmp", folder_id, True)
         #kanban_id = self.env.ref('module_install_wizard_view').id
         return
+
+    def _check_fields(self):
+        if self.source_type == 'G':
+            github_fields = ['token', 'repository_owner', 'repository_name', 'branch']
+            missing_fields = [f for f in github_fields if not getattr(self, f)]
+            if len(missing_fields) > 0:
+                msg = "Missing github fields ({}) to clone modules." \
+                    .format(", ".join(missing_fields))
+                raise UserError(msg)
+                return False
+        elif self.source_type == 'Z':
+            if not self.zip_file:
+                raise UserError("Zip file not set to extract modules.")
+                return False
+        return True
 
     def _find_module(self, root_path, folder_id, rec=False):
         path = join(root_path, folder_id)
@@ -154,6 +171,14 @@ class Source(models.Model):
                 if rec:
                     self._find_module(path, f)
 
+    @api.multi
+    def write(self, vals):
+        _logger.warning(vals)
+        if 'source_type' in vals and vals['source_type'] != self.source_type:
+            raise UserError("Cannot change source type after source creation")
+        else:
+            return super(Source, self).write(vals)
+
 
 class WizardModule(models.TransientModel):
     _name = "module_install.wizard"
@@ -173,6 +198,8 @@ class WizardModule(models.TransientModel):
             _logger.info("Dest folder: " + dest)
             clear_folder(dest)
             copytree(self.folder_path, dest)
+            msg = "Module {0} succesfulled copied to {1}".format(self.module_name, dest)
+            raise UserWarning(msg)
         except Exception as e:
             _logger.exception(e)
             raise UserError(str(e))
