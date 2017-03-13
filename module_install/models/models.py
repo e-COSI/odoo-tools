@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
 import logging
@@ -44,7 +44,7 @@ class GithubSource(models.Model):
         cmd = "git clone https://{0}@{1} -b {2} {3}" \
             .format(self.token, repo_url, self.branch, temp_folder)
         if call(cmd, shell=True) == 0:
-            _logger.info(self.repository_name + " has been successfully cloned")
+            _logger.info(self.repository_name + _(" has been successfully cloned"))
             return folder_id
         return ""
 
@@ -65,15 +65,15 @@ class ZipSource(models.Model):
             temp_folder = temp_zip.replace('.', '_')
             clear_folder(temp_folder)
             if zipfile.is_zipfile(temp_zip):
-                _logger.warning("Archive is a zip.")
+                _logger.info(_("Archive is a zip file."))
                 zip_ref = zipfile.ZipFile(temp_zip, 'r')
                 zip_ref.extractall(temp_folder)
             elif tarfile.is_tarfile(temp_zip):
-                _logger.warning("Archive is a tar.")
+                _logger.warning(_("Archive is a tar file."))
                 tar_ref = tarfile.open(temp_zip)
                 tar_ref.extractall(temp_folder)
             else:
-                _logger.warning("Unrecognized compression file format.")
+                _logger.warning(_("Unrecognized compression file format."))
             return temp_folder
         return ""
 
@@ -102,8 +102,8 @@ class Source(models.Model):
         ('Z', "Zip"),
     ], string="Source type", default="G", required=True)
     source_install_folder = fields.Char(required=True)
+    #module_subfoler = fields.Char()
     module_ids = fields.One2many('module_install.wizard', 'source', string="Source modules")
-
 
     @api.multi
     def get_source(self):
@@ -127,13 +127,13 @@ class Source(models.Model):
             github_fields = ['repository_owner', 'repository_name', 'branch']
             missing_fields = [f for f in github_fields if not getattr(self, f)]
             if len(missing_fields) > 0:
-                msg = "Missing github fields ({}) to clone modules." \
+                msg = _("Missing github fields ({}) to clone modules.") \
                     .format(", ".join(missing_fields))
                 raise UserError(msg)
                 return False
         elif self.source_type == 'Z':
             if not self.zip_file:
-                raise UserError("Zip file not set to extract modules.")
+                raise UserError(_("Zip file not set to extract modules."))
                 return False
         return True
 
@@ -162,13 +162,13 @@ class Source(models.Model):
                     records = module_model.search([
                         ('folder_path', '=', path),
                     ])
-                    _logger.warning(str(len(records)) + " modules found")
+                    _logger.warning(str(len(records)) + _(" modules found"))
                     if len(records) == 0:
                         module_model.create(values)
                     else:
                         records.ensure_one()
                         records.write(values)
-                    _logger.info("Module {} found".format(data["name"]))
+                    #_logger.info("Module {} found".format(data["name"]))
                 if rec:
                     self._find_module(path, f)
 
@@ -176,7 +176,7 @@ class Source(models.Model):
     def write(self, vals):
         _logger.warning(vals)
         if 'source_type' in vals and vals['source_type'] != self.source_type:
-            raise UserError("Cannot change source type after source creation")
+            raise UserError(_("Cannot change source type after source creation"))
         else:
             return super(Source, self).write(vals)
 
@@ -196,11 +196,11 @@ class WizardModule(models.TransientModel):
             or isfile(self.folder_path) or not isfile(self.folder_path + "/__manifest__.py"):
             self.source.get_source()
         try:
-            dest = join(self.source.source_install_folder, self.module_name)
+            dest = join(self.source.source_install_folder, self.name)
             _logger.info("Dest folder: " + dest)
             clear_folder(dest)
             copytree(self.folder_path, dest)
-            msg = "Module {0} succesfulled copied to {1}".format(self.module_name, dest)
+            msg = _("Module {0} succesfulled copied to {1}").format(self.name, dest)
             raise UserWarning(msg)
         except Exception as e:
             _logger.exception(e)
