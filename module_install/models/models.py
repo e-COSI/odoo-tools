@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 import logging
 from subprocess import call
@@ -102,25 +102,35 @@ class Source(models.Model):
         ('Z', "Zip"),
     ], string="Source type", default="G", required=True)
     source_install_folder = fields.Char(required=True)
-    #module_subfoler = fields.Char()
+    search_depth = fields.Integer(default=0)
     module_ids = fields.One2many('module_install.wizard', 'source', string="Source modules")
+
+    @api.constrains('search_depth')
+    def _check_depth(self):
+        _MAX_DEPTH = 5
+        for record in self:
+            if record.search_depth < 0:
+                raise ValidationError(_("Search depth must be a positive value."))
+            elif record.search_depth > _MAX_DEPTH:
+                msg = _("Maximum search depth allowed is {}.").format(_MAX_DEPTH)
+                raise ValidationError(msg)
 
     @api.multi
     def get_source(self):
-        root_path = "/tmp"
-        folder_id = ""
-        if not self._check_fields():
-            pass
-        elif self.source_type == 'G':
-            folder_id = self._clone_repository()
-        elif self.source_type == 'Z':
-            folder_id = self._unzip_file()
-        #elif self.source_type == 'S':
-        #    folder_id = self._get_directory()
-        if folder_id:
-            self._find_module("/tmp", folder_id, True)
-        #kanban_id = self.env.ref('module_install_wizard_view').id
-        return
+        for record in self:
+            folder_id = ""
+            record._check_fields()
+            if record.source_type == 'G':
+                folder_id = record._clone_repository()
+            elif record.source_type == 'Z':
+                folder_id = record._unzip_file()
+            #elif self.source_type == 'S':
+            #    folder_id = self._get_directory()
+            if folder_id:
+                record._find_module(join("/tmp", folder_id), self.search_depth)
+            else:
+                msg = _("No modules found with search level {}".format(record.search_depth))
+                raise UserWarning(msg)
 
     def _check_fields(self):
         if self.source_type == 'G':
@@ -130,15 +140,12 @@ class Source(models.Model):
                 msg = _("Missing github fields ({}) to clone modules.") \
                     .format(", ".join(missing_fields))
                 raise UserError(msg)
-                return False
         elif self.source_type == 'Z':
             if not self.zip_file:
                 raise UserError(_("Zip file not set to extract modules."))
-                return False
-        return True
 
-    def _find_module(self, root_path, folder_id, rec=False):
-        path = join(root_path, folder_id)
+    def _find_module(self, path, depth=0):
+        #path = join(root_path, folder_id)
         if not isfile(path):
             module_model = self.env["module_install.wizard"]
             """
@@ -148,9 +155,13 @@ class Source(models.Model):
                 _logger.warning(msg)
                 m.unlink()
             """
-            for f in os.listdir(path):
-                filepath = join(path, f)
-                if f == "__manifest__.py":
+            for filename in os.listdir(path):
+                _logger.warning("Searching modules in {0} - depth: {1}".format(path, depth))
+                filepath = join(path, filename)
+                if depth > 0:
+                    if not isfile(filepath):
+                        self._find_module(filepath, depth - 1)
+                elif filename == "__manifest__.py":
                     datafile = open(filepath, 'r').read()
                     data = literal_eval(datafile)
                     values = {
@@ -169,8 +180,6 @@ class Source(models.Model):
                         records.ensure_one()
                         records.write(values)
                     #_logger.info("Module {} found".format(data["name"]))
-                if rec:
-                    self._find_module(path, f)
 
     @api.multi
     def write(self, vals):
@@ -192,16 +201,18 @@ class WizardModule(models.TransientModel):
     @api.multi
     def install_module(self):
         # Checks if module tmp folder exists, regenerate its source otherwise
-        if not self.folder_path or not exists(self.folder_path) \
-            or isfile(self.folder_path) or not isfile(self.folder_path + "/__manifest__.py"):
-            self.source.get_source()
-        try:
-            dest = join(self.source.source_install_folder, self.name)
-            _logger.info("Dest folder: " + dest)
-            clear_folder(dest)
-            copytree(self.folder_path, dest)
-            msg = _("Module {0} succesfulled copied to {1}").format(self.name, dest)
-            raise UserWarning(msg)
-        except Exception as e:
-            _logger.exception(e)
-            raise UserError(str(e))
+        for record in self:
+            if not record.folder_path or not exists(record.folder_path) \
+                or isfile(record.folder_path) \
+                or not isfile(record.folder_path + "/__manifest__.py"):
+                record.source.get_source()
+            try:
+                dest = join(record.source.source_install_folder, record.name)
+                _logger.info("Dest folder: " + dest)
+                clear_folder(dest)
+                copytree(record.folder_path, dest)
+                msg = _("Module {0} succesfulled copied to {1}").format(record.name, dest)
+                raise UserWarning(msg)
+            except Exception as e:
+                _logger.exception(e)
+                raise UserError(str(e))

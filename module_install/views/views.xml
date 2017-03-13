@@ -27,6 +27,7 @@
                                 <field name="source_name" />
                                 <field name="source_type" />
                                 <field name="source_install_folder" />
+                                <field name="search_depth" />
                             </group>
                             <group attrs="{'invisible': [('source_type', '!=', 'G')]}">
                                 <field name="token" />
