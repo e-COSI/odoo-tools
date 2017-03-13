@@ -25,7 +25,7 @@ def clear_folder(folder_path):
 class GithubSource(models.Model):
     _name = "module_install.github_source"
 
-    token = fields.Char()
+    token = fields.Char(default="")
     repository_owner = fields.Char()
     repository_name = fields.Char()
     branch = fields.Char(default="master")
@@ -124,7 +124,7 @@ class Source(models.Model):
 
     def _check_fields(self):
         if self.source_type == 'G':
-            github_fields = ['token', 'repository_owner', 'repository_name', 'branch']
+            github_fields = ['repository_owner', 'repository_name', 'branch']
             missing_fields = [f for f in github_fields if not getattr(self, f)]
             if len(missing_fields) > 0:
                 msg = "Missing github fields ({}) to clone modules." \
@@ -155,7 +155,8 @@ class Source(models.Model):
                     data = literal_eval(datafile)
                     values = {
                         'source': self.id,
-                        'module_name': folder_id,
+                        'name': data['name'],
+                        'version': data['version'],
                         'folder_path': path
                     }
                     records = module_model.search([
@@ -184,7 +185,8 @@ class WizardModule(models.TransientModel):
     _name = "module_install.wizard"
 
     source = fields.Many2one("module_install.source", required=True, ondelete='cascade')
-    module_name = fields.Char(string="module")
+    name = fields.Char()
+    version = fields.Char()
     folder_path = fields.Char()
 
     @api.multi

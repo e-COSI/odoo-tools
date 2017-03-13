@@ -50,6 +50,7 @@
                             </group-->
                         </group>
                         <footer>
+                            <label for="module_ids" string="Source Module List"/>
                             <field name="module_ids" />
                         </footer>
                     </sheet>
@@ -69,12 +70,13 @@
             </field>
         </record-->
 
-        <record model="ir.ui.view" id="module_install_wizard_form">
-            <field name="name">module_install.wizard.form</field>
+        <record model="ir.ui.view" id="module_install_wizard_list">
+            <field name="name">module_install.wizard.list</field>
             <field name="model">module_install.wizard</field>
             <field name="arch" type="xml">
                 <tree create="false" edit="false">
-                    <field name="module_name" />
+                    <field name="name"/>
+                    <field name="version" />
                     <button string="Install module" type="object" name="install_module"
                             class="oe_read_only oe_start_button" icon="fa-tasks" />
                 </tree>
