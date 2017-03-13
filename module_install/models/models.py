@@ -206,9 +206,11 @@ class WizardModule(models.TransientModel):
                 or isfile(record.folder_path) \
                 or not isfile(record.folder_path + "/__manifest__.py"):
                 record.source.get_source()
+                msg = _("A problem occurred while downloading module {}, reloading source files") \
+                    .format(record.name)
+                raise UserError(msg)
+            dest = join(record.source.source_install_folder, record.name)
             try:
-                dest = join(record.source.source_install_folder, record.name)
-                _logger.info("Dest folder: " + dest)
                 clear_folder(dest)
                 copytree(record.folder_path, dest)
                 msg = _("Module {0} succesfulled copied to {1}").format(record.name, dest)
