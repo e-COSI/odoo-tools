@@ -1,0 +1,12 @@
+{
+    "backup_root": "/home/vagrant/backup/",
+    "conf_path": "/home/vagrant/shared/test.conf",
+    "databases": [
+        {
+            "base_url": "vagrant@192.168.50.4",
+            "filestore_path": "/home/vagrant/.local/share/Odoo/filestore/",
+            "db_names": ["testBase"],
+            "source": "odoo_backup/"
+        }
+    ]
+}
