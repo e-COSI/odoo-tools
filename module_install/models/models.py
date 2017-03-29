@@ -216,4 +216,4 @@ class WizardModule(models.TransientModel):
                 msg = _("Module {0} succesfulled copied to {1}").format(record.name, dest)
                 raise UserWarning(msg)
             except Exception as e:
-                raise UserError(str(e))
+                raise UserError(repr(e))
