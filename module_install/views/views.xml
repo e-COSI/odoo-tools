@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- Source treeview -->
+        <record model="ir.ui.view" id="module_install_list_view">
+            <field name="name">module_install.treeview.form</field>
+            <field name="model">module_install.source</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="source_name" />
+                    <field name="source_type" />
+                    <field name="repository_name" attrs="{'invisible': [('source_type', '!=', 'G')]}" />
+                    <field name="zip_filename" attrs="{'invisible': [('source_type', '!=', 'Z')]}" />
+                </tree>
+            </field>
+        </record>
+        <!-- Source form -->
+        <record model="ir.ui.view" id="module_install_source_view">
+            <field name="name">module_install.source.form</field>
+            <field name="model">module_install.source</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="source_name" />
+                                <field name="source_type" />
+                                <field name="source_install_folder" />
+                                <field name="search_depth" />
+                            </group>
+                            <group attrs="{'invisible': [('source_type', '!=', 'G')]}">
+                                <field name="token" />
+                                <field name="repository_owner" />
+                                <field name="repository_name" />
+                                <field name="branch" />
+                                <button string="Clone Modules" type="object" name="get_source"
+                                   class="oe_read_only oe_start_button" icon="fa-github" />
+                            </group>
+                            <group attrs="{'invisible': [('source_type', '!=', 'Z')]}">
+                                <field name="zip_filename" invisible="1" />
+                                <field name="zip_file" filename="zip_filename" />
+                                <button string="Unzip Modules" type="object" name="get_source"
+                                   class="oe_read_only oe_start_button" icon="fa-file-archive-o" />
+                            </group>
+                            <!--group attrs="{'invisible': [('source_type', '!=', 'S')]}">
+                                <field name="username" />
+                                <field name="password" password="1" />
+                                <field name="url" />
+                                <field name="path" />
+                            </group-->
+                        </group>
+                        <footer>
+                            <label for="module_ids" string="Source Module List"/>
+                            <field name="module_ids" />
+                        </footer>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Wizard form -->
+        <!--record model="ir.ui.view" id="module_install_wizard_view">
+            <field name="name">module_install.wizard.form</field>
+            <field name="model">module_install.wizard</field>
+            <field name="arch" type="xml" create="false" edit="false">
+                <tree>
+                    <field name="module_name" />
+                            class="oe_read_only oe_start_button" icon="fa-tasks" />
+                </tree>
+            </field>
+        </record-->
+
+        <record model="ir.ui.view" id="module_install_wizard_list">
+            <field name="name">module_install.wizard.list</field>
+            <field name="model">module_install.wizard</field>
+            <field name="arch" type="xml">
+                <tree create="false" edit="false">
+                    <field name="name"/>
+                    <field name="description"/>
+                    <field name="version" />
+                    <button string="Install module" type="object" name="install_module"
+                            class="oe_read_only oe_start_button" icon="fa-tasks" />
+                </tree>
+            </field>
+        </record>
+
+        <!-- Module main menu enty and treeview -->
+        <record model="ir.actions.act_window" id="module_install_action">
+            <field name="name">Sources</field>
+            <field name="res_model">module_install.source</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <menuitem id="main_module_install_menu" name="Install Module" />
+        <menuitem id="module_install_menu" name="Install Module"
+            parent="main_module_install_menu" />
+        <menuitem id="source_menu" name="Source"
+            parent="module_install_menu" action="module_install_action" />
+
+    </data>
+</odoo>

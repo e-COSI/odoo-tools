@@ -1,0 +1,277 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+#	* module_install
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 10.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-03-13 10:25+0000\n"
+"PO-Revision-Date: 2017-03-13 10:25+0000\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: module_install
+#: code:addons/module_install/models/models.py:47
+#, python-format
+msgid " has been successfully cloned"
+msgstr " a été cloné avec succès"
+
+#. module: module_install
+#: code:addons/module_install/models/models.py:165
+#, python-format
+msgid " modules found"
+msgstr " modules trouvés"
+
+#. module: module_install
+#: code:addons/module_install/models/models.py:72
+#, python-format
+msgid "Archive is a tar file."
+msgstr "L'archive est un fichier tar."
+
+#. module: module_install
+#: code:addons/module_install/models/models.py:68
+#, python-format
+msgid "Archive is a zip file."
+msgstr "L,archive est un fichier zip."
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source_branch
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_branch
+msgid "Branch"
+msgstr "Branche"
+
+#. module: module_install
+#: code:addons/module_install/models/models.py:179
+#, python-format
+msgid "Cannot change source type after source creation"
+msgstr "Impossible de changer le type d'une source après sa création"
+
+#. module: module_install
+#: model:ir.ui.view,arch_db:module_install.module_install_source_view
+msgid "Clone Modules"
+msgstr "Cloner les modules"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source_create_uid
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_create_uid
+#: model:ir.model.fields,field_description:module_install.field_module_install_wizard_create_uid
+#: model:ir.model.fields,field_description:module_install.field_module_install_zip_source_create_uid
+msgid "Created by"
+msgstr "Créé par"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source_create_date
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_create_date
+#: model:ir.model.fields,field_description:module_install.field_module_install_wizard_create_date
+#: model:ir.model.fields,field_description:module_install.field_module_install_zip_source_create_date
+msgid "Created on"
+msgstr "Crée le"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source_display_name
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_display_name
+#: model:ir.model.fields,field_description:module_install.field_module_install_wizard_display_name
+#: model:ir.model.fields,field_description:module_install.field_module_install_zip_source_display_name
+msgid "Display Name"
+msgstr "Nom"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_wizard_folder_path
+msgid "Folder path"
+msgstr "Chemin du dossier"
+
+#. module: module_install
+#: selection:module_install.source,source_type:0
+msgid "Github"
+msgstr ""
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source_id
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_id
+#: model:ir.model.fields,field_description:module_install.field_module_install_wizard_id
+#: model:ir.model.fields,field_description:module_install.field_module_install_zip_source_id
+msgid "ID"
+msgstr ""
+
+#. module: module_install
+#: model:ir.ui.menu,name:module_install.main_module_install_menu
+#: model:ir.ui.menu,name:module_install.module_install_menu
+msgid "Install Module"
+msgstr "Installer le module"
+
+#. module: module_install
+#: model:ir.ui.view,arch_db:module_install.module_install_wizard_list
+msgid "Install module"
+msgstr "Installer le module"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source___last_update
+#: model:ir.model.fields,field_description:module_install.field_module_install_source___last_update
+#: model:ir.model.fields,field_description:module_install.field_module_install_wizard___last_update
+#: model:ir.model.fields,field_description:module_install.field_module_install_zip_source___last_update
+msgid "Last Modified on"
+msgstr "Dernière modification le"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source_write_uid
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_write_uid
+#: model:ir.model.fields,field_description:module_install.field_module_install_wizard_write_uid
+#: model:ir.model.fields,field_description:module_install.field_module_install_zip_source_write_uid
+msgid "Last Updated by"
+msgstr "Modifié par"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source_write_date
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_write_date
+#: model:ir.model.fields,field_description:module_install.field_module_install_wizard_write_date
+#: model:ir.model.fields,field_description:module_install.field_module_install_zip_source_write_date
+msgid "Last Updated on"
+msgstr "Modifié le"
+
+#. module: module_install
+#: code:addons/module_install/models/models.py:130
+#, python-format
+msgid "Missing github fields ({}) to clone modules."
+msgstr "Les champs suivants sont manquant pour cloner les modules: ({})."
+
+#. module: module_install
+#: code:addons/module_install/models/models.py:203
+#, python-format
+msgid "Module {0} succesfulled copied to {1}"
+msgstr "Le module {0} a été copié dans {1} avec succès"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_wizard_name
+msgid "Name"
+msgstr "Nom"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source_repository_name
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_repository_name
+msgid "Repository name"
+msgstr "Nom du dépot"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source_repository_owner
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_repository_owner
+msgid "Repository owner"
+msgstr "Propriétaire du dépot"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_wizard_source
+#: model:ir.ui.menu,name:module_install.source_menu
+msgid "Source"
+msgstr ""
+
+#. module: module_install
+#: model:ir.ui.view,arch_db:module_install.module_install_source_view
+msgid "Source Module List"
+msgstr "Liste des modules"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_source_install_folder
+msgid "Source install folder"
+msgstr "Répertoire d'installation"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_module_ids
+msgid "Source modules"
+msgstr "Modules"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_source_name
+msgid "Source name"
+msgstr "Nom de la source"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_source_type
+msgid "Source type"
+msgstr "Type de source"
+
+#. module: module_install
+#: model:ir.actions.act_window,name:module_install.module_install_action
+msgid "Sources"
+msgstr ""
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source_subdir
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_subdir
+msgid "Subdir"
+msgstr "Sous-dossier"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source_tag
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_tag
+msgid "Tag"
+msgstr ""
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_github_source_token
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_token
+msgid "Token"
+msgstr ""
+
+#. module: module_install
+#: code:addons/module_install/models/models.py:76
+#, python-format
+msgid "Unrecognized compression file format."
+msgstr "Type de fichier compressé non reconnu."
+
+#. module: module_install
+#: model:ir.ui.view,arch_db:module_install.module_install_source_view
+msgid "Unzip Modules"
+msgstr "Dizipper les modules"
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_wizard_version
+msgid "Version"
+msgstr ""
+
+#. module: module_install
+#: selection:module_install.source,source_type:0
+msgid "Zip"
+msgstr ""
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_zip_file
+#: model:ir.model.fields,field_description:module_install.field_module_install_zip_source_zip_file
+msgid "Zip file"
+msgstr "Fichier compressé"
+
+#. module: module_install
+#: code:addons/module_install/models/models.py:136
+#, python-format
+msgid "Zip file not set to extract modules."
+msgstr "Fichier compressé non précisé pour l'extraction."
+
+#. module: module_install
+#: model:ir.model.fields,field_description:module_install.field_module_install_source_zip_filename
+#: model:ir.model.fields,field_description:module_install.field_module_install_zip_source_zip_filename
+msgid "Zip filename"
+msgstr "Nom"
+
+#. module: module_install
+#: model:ir.model,name:module_install.model_module_install_github_source
+msgid "module_install.github_source"
+msgstr ""
+
+#. module: module_install
+#: model:ir.model,name:module_install.model_module_install_source
+msgid "module_install.source"
+msgstr ""
+
+#. module: module_install
+#: model:ir.model,name:module_install.model_module_install_wizard
+msgid "module_install.wizard"
+msgstr ""
+
+#. module: module_install
+#: model:ir.model,name:module_install.model_module_install_zip_source
+msgid "module_install.zip_source"
+msgstr ""
+
