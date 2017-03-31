@@ -95,7 +95,7 @@ class Source(models.Model):
         ('G', "Github"),
         ('Z', "Zip"),
     ], string="Source type", default="G", required=True)
-    source_install_folder = fields.Char(required=True)
+    source_install_folder = fields.Char(default="/mnt/extra-addons", required=True)
     search_depth = fields.Integer(default=0)
     module_ids = fields.One2many('module_install.wizard', 'source', string="Source modules")
 
