@@ -24,7 +24,7 @@ Vagrant.configure("2") do |config|
     snapshot.vm.box_download_insecure = true
 
     snapshot.vm.provision :shell, path: "setup_rsnapshot.sh"
-    snapshot.vm.provision "shell", run: "always", inline: "cp shared/rsnapshot.conf /etc/"
+    #snapshot.vm.provision "shell", run: "always", inline: "cp shared/rsnapshot.conf /etc/"
   end
 
   # To specify where vagrant will download the box, set VAGRANT_HOME in env
