@@ -7,7 +7,6 @@ import logging
 import subprocess
 from os import path
 import os
-#from os.path import isfile, join, exists
 from ast import literal_eval
 from shutil import copytree, rmtree
 from base64 import b64decode
@@ -30,12 +29,12 @@ class GithubSource(models.Model):
     repository_owner = fields.Char()
     repository_name = fields.Char()
     branch = fields.Char(default="master")
-    # TO DO: handle specific git tag or repo subdirectory
+    # TODO: handle specific git tag or repo subdirectory
     tag = fields.Char(default="latest")
     subdir = fields.Char()
 
     def _clone_repository(self):
-        # TO DO: raise a warning popup in case credentials are missing or invalid
+        # TODO: raise a warning popup in case credentials are missing or invalid
         repo_url = "github.com/{0}/{1}.git".format(self.repository_owner, self.repository_name)
         folder_id = "{0}_{1}_{2}_{3}" \
             .format(self.repository_owner, self.repository_name, self.branch, self.tag)
@@ -48,9 +47,13 @@ class GithubSource(models.Model):
             branch=self.branch,
             dest=temp_folder
         )
-        if subprocess.call(cmd) == 0:
-            _logger.info(self.repository_name + _(" has been successfully cloned"))
-            return folder_id
+        _logger.info("Running: " + cmd)
+        try:
+            if subprocess.Popen(cmd.split(" ")).wait() == 0:
+                _logger.info(self.repository_name + _(" has been successfully cloned"))
+                return folder_id
+        except Exception as e:
+            _logger.error(repr(e))
         return ""
 
 
@@ -61,7 +64,7 @@ class ZipSource(models.Model):
     zip_filename = fields.Char()
 
     def _unzip_file(self):
-        # TO DO: raise a warning if file is not set or invalid
+        # TODO: raise a warning if file is not set or invalid
         if self.zip_file:
             temp_zip = "/tmp/" + self.zip_filename
             clear_folder(temp_zip)
@@ -90,7 +93,6 @@ class Source(models.Model):
     source_name = fields.Char(required=True)
     source_type = fields.Selection(selection=[
         ('G', "Github"),
-        #('S', "SFTP"),
         ('Z', "Zip"),
     ], string="Source type", default="G", required=True)
     source_install_folder = fields.Char(required=True)
@@ -116,8 +118,6 @@ class Source(models.Model):
                 folder_id = record._clone_repository()
             elif record.source_type == 'Z':
                 folder_id = record._unzip_file()
-            #elif self.source_type == 'S':
-            #    folder_id = self._get_directory()
             if folder_id:
                 record._find_module(path.join("/tmp", folder_id), self.search_depth)
             else:
