@@ -4,7 +4,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 
 import logging
-from subprocess import call
+import subprocess
 from os import path
 import os
 #from os.path import isfile, join, exists
@@ -42,9 +42,13 @@ class GithubSource(models.Model):
         temp_folder = "/tmp/" + folder_id
         # If destination folder already exists delete it and clone again repository
         clear_folder(temp_folder)
-        cmd = "git clone https://{0}@{1} -b {2} {3}" \
-            .format(self.token, repo_url, self.branch, temp_folder)
-        if call(cmd, shell=True) == 0:
+        cmd = "git clone https://{token}@{url} -b {branch} {dest}".format(
+            token=self.token,
+            url=repo_url,
+            branch=self.branch,
+            dest=temp_folder
+        )
+        if subprocess.call(cmd) == 0:
             _logger.info(self.repository_name + _(" has been successfully cloned"))
             return folder_id
         return ""
