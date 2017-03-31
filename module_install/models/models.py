@@ -5,8 +5,9 @@ from odoo.exceptions import UserError, ValidationError
 
 import logging
 from subprocess import call
+from os import path
 import os
-from os.path import isfile, join, exists
+#from os.path import isfile, join, exists
 from ast import literal_eval
 from shutil import copytree, rmtree
 from base64 import b64decode
@@ -16,8 +17,8 @@ import zipfile, tarfile
 _logger = logging.getLogger(__name__)
 
 def clear_folder(folder_path):
-    if exists(folder_path):
-        if isfile(folder_path):
+    if path.exists(folder_path):
+        if path.isfile(folder_path):
             os.remove(folder_path)
         else:
             rmtree(folder_path)
@@ -77,19 +78,6 @@ class ZipSource(models.Model):
             return temp_folder
         return ""
 
-"""
-class SFTPSource(models.Model):
-    _name = "module_install.sftp_source"
-
-    username = fields.Char()
-    password = fields.Char()
-    url = fields.Char()
-    path = fields.Char()
-
-    def _get_directory(self):
-        # TO DO: handle SFTP connexion and fetch modules
-        return ""
-"""
 
 class Source(models.Model):
     _name = "module_install.source"
@@ -127,7 +115,7 @@ class Source(models.Model):
             #elif self.source_type == 'S':
             #    folder_id = self._get_directory()
             if folder_id:
-                record._find_module(join("/tmp", folder_id), self.search_depth)
+                record._find_module(path.join("/tmp", folder_id), self.search_depth)
             else:
                 msg = _("No modules found with search level {}".format(record.search_depth))
                 raise UserWarning(msg)
@@ -144,9 +132,9 @@ class Source(models.Model):
             if not self.zip_file:
                 raise UserError(_("Zip file not set to extract modules."))
 
-    def _find_module(self, path, depth=0):
+    def _find_module(self, module_path, depth=0):
         #path = join(root_path, folder_id)
-        if not isfile(path):
+        if not path.isfile(module_path):
             module_model = self.env["module_install.wizard"]
             """
             old_modules = module_model.search(['source.id', '=', self.id])
@@ -155,25 +143,27 @@ class Source(models.Model):
                 _logger.warning(msg)
                 m.unlink()
             """
-            for filename in os.listdir(path):
-                _logger.warning("Searching modules in {0} - depth: {1}".format(path, depth))
-                filepath = join(path, filename)
+            for filename in os.listdir(module_path):
+                _logger.debug("Searching modules in {0} - depth: {1} - file: {2}".format(module_path, depth, filename))
+                filepath = path.join(module_path, filename)
                 if depth > 0:
-                    if not isfile(filepath):
+                    if not path.isfile(filepath):
                         self._find_module(filepath, depth - 1)
                 elif filename == "__manifest__.py":
                     datafile = open(filepath, 'r').read()
                     data = literal_eval(datafile)
                     values = {
                         'source': self.id,
-                        'name': data['name'],
+                        'name': path.basename(module_path),
+                        'description': data['name'],
                         'version': data['version'],
-                        'folder_path': path
+                        'folder_path': module_path
                     }
                     records = module_model.search([
-                        ('folder_path', '=', path),
+                        ('folder_path', '=', module_path),
                     ])
-                    _logger.warning(str(len(records)) + _(" modules found"))
+                    _logger.info(str(len(records)) + _(" modules found"))
+                    # TODO: Refresh all source's module list and remove unused ones
                     if len(records) == 0:
                         module_model.create(values)
                     else:
@@ -195,6 +185,7 @@ class WizardModule(models.TransientModel):
 
     source = fields.Many2one("module_install.source", required=True, ondelete='cascade')
     name = fields.Char()
+    description = fields.Char()
     version = fields.Char()
     folder_path = fields.Char()
 
@@ -202,14 +193,15 @@ class WizardModule(models.TransientModel):
     def install_module(self):
         # Checks if module tmp folder exists, regenerate its source otherwise
         for record in self:
-            if not record.folder_path or not exists(record.folder_path) \
-                or isfile(record.folder_path) \
-                or not isfile(record.folder_path + "/__manifest__.py"):
+            if not record.folder_path or not path.exists(record.folder_path) \
+                or path.isfile(record.folder_path) \
+                or not path.isfile(record.folder_path + "/__manifest__.py"):
                 record.source.get_source()
                 msg = _("A problem occurred while downloading module {}, reloading source files") \
                     .format(record.name)
                 raise UserError(msg)
-            dest = join(record.source.source_install_folder, record.name)
+            dest = path.join(record.source.source_install_folder, record.name)
+            # TODO: CLeaner and more specific user error handling
             try:
                 clear_folder(dest)
                 copytree(record.folder_path, dest)
