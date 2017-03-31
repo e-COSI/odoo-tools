@@ -1,1 +1,0 @@
-{"virtualbox":{"/home/vagrant/SharedFolder":{"guestpath":"/home/vagrant/SharedFolder","hostpath":"D:/SharedFolder","disabled":false,"__vagrantfile":true},"/vagrant":{"guestpath":"/vagrant","hostpath":"D:/Vagrant Instances/Rsnapshot - Odoo","disabled":false,"__vagrantfile":true}}}
