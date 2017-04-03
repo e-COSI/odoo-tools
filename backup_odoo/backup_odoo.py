@@ -7,7 +7,7 @@ import logging, json, argparse
 
 from time import time
 
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 _logger = logging.getLogger("SNAPSHOT_CONF")
 
 class BackupOdoo(object):
