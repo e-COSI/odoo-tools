@@ -53,7 +53,7 @@ class GithubSource(models.Model):
                 _logger.info(self.repository_name + _(" has been successfully cloned"))
                 return folder_id
         except Exception as e:
-            _logger.error(repr(e))
+            _logger.exception(e)
         return ""
 
 
@@ -122,7 +122,7 @@ class Source(models.Model):
                 record._find_module(path.join("/tmp", folder_id), self.search_depth)
             else:
                 msg = _("No modules found with search level {}".format(record.search_depth))
-                raise UserWarning(msg)
+                _logger.warning(msg)
 
     def _check_fields(self):
         if self.source_type == 'G':
@@ -173,13 +173,13 @@ class Source(models.Model):
                     else:
                         records.ensure_one()
                         records.write(values)
-                    #_logger.info("Module {} found".format(data["name"]))
+                    _logger.info("Module {} found".format(data["name"]))
 
     @api.multi
     def write(self, vals):
         _logger.warning(vals)
         if 'source_type' in vals and vals['source_type'] != self.source_type:
-            raise UserError(_("Cannot change source type after source creation"))
+            _logger.error(_("Cannot change source type after source creation"))
         else:
             return super(Source, self).write(vals)
 
@@ -203,13 +203,16 @@ class WizardModule(models.TransientModel):
                 record.source.get_source()
                 msg = _("A problem occurred while downloading module {}, reloading source files") \
                     .format(record.name)
-                raise UserError(msg)
+                _logger.error(msg)
+                #raise UserError(msg)
             dest = path.join(record.source.source_install_folder, record.name)
             # TODO: CLeaner and more specific user error handling
             try:
                 clear_folder(dest)
                 copytree(record.folder_path, dest)
                 msg = _("Module {0} succesfulled copied to {1}").format(record.name, dest)
-                raise UserWarning(msg)
+                _logger.info(msg)
+                #raise UserWarning(msg)
             except Exception as e:
-                raise UserError(repr(e))
+                _logger.exception(e)
+                #raise UserError(repr(e))
