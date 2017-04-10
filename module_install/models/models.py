@@ -123,7 +123,7 @@ class Source(models.Model):
                 record._find_module(path.join("/tmp", folder_id), self.search_depth)
             else:
                 msg = _("No modules found with search level {}".format(record.search_depth))
-                record.logs += msg + "\n"
+                record.logs = record.logs + msg + "\n"
                 _logger.warning(msg)
                 return {
                     'type': 'ir.actions.client',
@@ -134,7 +134,7 @@ class Source(models.Model):
     def clear_logs(self):
         print("Clear logs called")
         for record in self:
-            record.logs= ""
+            record.logs = ""
 
     def _check_fields(self):
         if self.source_type == 'G':
@@ -143,7 +143,7 @@ class Source(models.Model):
             if len(missing_fields) > 0:
                 msg = _("Missing github fields ({}) to clone modules.") \
                     .format(", ".join(missing_fields))
-                self.logs += msg + "\n"
+                self.logs = self.logs + msg + "\n"
         elif self.source_type == 'Z':
             if not self.zip_file:
                 raise UserError(_("Zip file not set to extract modules."))
@@ -192,7 +192,7 @@ class Source(models.Model):
         _logger.warning(vals)
         if 'source_type' in vals and vals['source_type'] != self.source_type:
             msg = _("Cannot change source type after source creation")
-            self.logs += msg + "\n"
+            self.logs = self.logs + msg + "\n"
         else:
             return super(Source, self).write(vals)
 
@@ -216,7 +216,7 @@ class WizardModule(models.TransientModel):
                 record.source.get_source()
                 msg = _("A problem occurred while downloading module {}, reloading source files") \
                     .format(record.name)
-                record.source.logs += msg + "\n"
+                record.source.logs = record.logs + msg + "\n"
                 _logger.error(msg)
             dest = path.join(record.source.source_install_folder, record.name)
             # TODO: CLeaner and more specific user error handling
@@ -227,7 +227,7 @@ class WizardModule(models.TransientModel):
                 _logger.info(msg)
             except Exception as e:
                 _logger.exception(e)
-                record.source.logs += str(e) + "\n"
+                record.source.logs = record.source.logs + str(e) + "\n"
                 return {
                     'type': 'ir.actions.client',
                     'tag': 'reload',
