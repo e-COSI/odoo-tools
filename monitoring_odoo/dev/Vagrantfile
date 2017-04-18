@@ -1,0 +1,32 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+Vagrant.configure("2") do |config|
+  
+  config.vm.box = "ubuntu/trusty64"
+  config.vm.synced_folder "D:/SharedFolder/", "/home/vagrant/SharedFolder"
+
+  config.vm.define :master do |master|
+    master.vm.hostname = "munin-master"
+    master.vm.network "private_network", ip: "192.168.42.9"
+    master.vm.provision :shell, path: "master_provision.sh"
+  end
+
+  config.vm.define :node do |node|
+    node.vm.hostname = "munin-node"
+    node.vm.network "private_network", ip: "192.168.49.3"
+
+    node.vm.provision "shell", inline: %{
+      apt-get update
+      apt-get install -y munin-node munin-plugins-extra
+      echo "allow ^192\\.168\\.42\\.9$" >> /etc/munin/munin-node.conf
+      # Check /var/log/munin/munin-node.log file to verify this is the correct ip of master node
+
+      # To install a new munin module just add it to /usr/share/munin/plugins
+      # Then to enable it create a symlink in /etc/munin/plugins pointing to it
+      /etc/init.d/munin-node restart
+    }
+  end
+
+end
