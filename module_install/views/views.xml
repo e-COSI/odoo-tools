@@ -64,18 +64,6 @@
             </field>
         </record>
 
-        <!-- Wizard form -->
-        <!--record model="ir.ui.view" id="module_install_wizard_view">
-            <field name="name">module_install.wizard.form</field>
-            <field name="model">module_install.wizard</field>
-            <field name="arch" type="xml" create="false" edit="false">
-                <tree>
-                    <field name="module_name" />
-                            class="oe_read_only oe_start_button" icon="fa-tasks" />
-                </tree>
-            </field>
-        </record-->
-
         <record model="ir.ui.view" id="module_install_wizard_list">
             <field name="name">module_install.wizard.list</field>
             <field name="model">module_install.wizard</field>

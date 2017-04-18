@@ -132,7 +132,6 @@ class Source(models.Model):
 
     @api.multi
     def clear_logs(self):
-        print("Clear logs called")
         for record in self:
             record.logs = ""
 
@@ -149,16 +148,8 @@ class Source(models.Model):
                 raise UserError(_("Zip file not set to extract modules."))
 
     def _find_module(self, module_path, depth=0):
-        #path = join(root_path, folder_id)
         if not path.isfile(module_path):
             module_model = self.env["module_install.wizard"]
-            """
-            old_modules = module_model.search(['source.id', '=', self.id])
-            for m in old_modules:
-                msg = "Clearing module {0} for source {1}".format(m, self.source_name)
-                _logger.warning(msg)
-                m.unlink()
-            """
             for filename in os.listdir(module_path):
                 _logger.debug("Searching modules in {0} - depth: {1} - file: {2}".format(module_path, depth, filename))
                 filepath = path.join(module_path, filename)
