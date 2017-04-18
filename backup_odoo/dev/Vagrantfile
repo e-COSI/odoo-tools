@@ -36,6 +36,4 @@ Vagrant.configure("2") do |config|
 
   # To run vagrant with more info diplayed set VAGRANT_LOG=info
 
-  # C:\Users\Micha?l Yadaba\VirtualBox VMs
- 
 end
