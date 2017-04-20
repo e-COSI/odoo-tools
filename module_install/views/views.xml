@@ -8,10 +8,10 @@
             <field name="model">module_install.source</field>
             <field name="arch" type="xml">
                 <tree>
-                    <field name="source_name" />
-                    <field name="source_type" />
-                    <field name="repository_name" attrs="{'invisible': [('source_type', '!=', 'G')]}" />
-                    <field name="zip_filename" attrs="{'invisible': [('source_type', '!=', 'Z')]}" />
+                    <field name="name" />
+                    <field name="type" />
+                    <field name="repository_name" attrs="{'invisible': [('type', '!=', 'G')]}" />
+                    <field name="zip_filename" attrs="{'invisible': [('type', '!=', 'Z')]}" />
                 </tree>
             </field>
         </record>
@@ -27,12 +27,12 @@
                     <sheet>
                         <group>
                             <group>
-                                <field name="source_name" />
-                                <field name="source_type" />
-                                <field name="source_install_folder" />
+                                <field name="name" />
+                                <field name="type" />
+                                <field name="install_folder" />
                                 <field name="search_depth" />
                             </group>
-                            <group attrs="{'invisible': [('source_type', '!=', 'G')]}">
+                            <group attrs="{'invisible': [('type', '!=', 'G')]}">
                                 <field name="token" password="True" />
                                 <field name="repository_owner" />
                                 <field name="repository_name" />
@@ -40,7 +40,7 @@
                                 <button string="Clone Modules" type="object" name="get_source"
                                 class="oe_read_only oe_start_button" icon="fa-github" />
                             </group>
-                            <group attrs="{'invisible': [('source_type', '!=', 'Z')]}">
+                            <group attrs="{'invisible': [('type', '!=', 'Z')]}">
                                 <field name="zip_filename" invisible="1" />
                                 <field name="zip_file" filename="zip_filename" />
                                 <button string="Unzip Modules" type="object" name="get_source"

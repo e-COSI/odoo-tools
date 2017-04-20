@@ -34,7 +34,6 @@ class GithubSource(models.Model):
     subdir = fields.Char()
 
     def _clone_repository(self):
-        # TODO: raise a warning popup in case credentials are missing or invalid
         repo_url = "github.com/{0}/{1}.git".format(self.repository_owner, self.repository_name)
         folder_id = "{0}_{1}_{2}_{3}" \
             .format(self.repository_owner, self.repository_name, self.branch, self.tag)
@@ -49,12 +48,17 @@ class GithubSource(models.Model):
         )
         _logger.info("Running: " + cmd)
         try:
-            if subprocess.Popen(cmd.split(" ")).wait() == 0:
+            process = subprocess.Popen(cmd.split(" "), stderr=subprocess.PIPE)
+            # Popen.communicate returns a tuple with STDIN, STDERR
+            stderr = process.communicate()[1]
+            if process.returncode == 0:
                 _logger.info(self.repository_name + _(" has been successfully cloned"))
-                return folder_id
+                return (folder_id, "")
+            else:
+                return ("", stderr)
         except Exception as e:
-            _logger.exception(e)
-        return ""
+            return ("", str(e))
+        return ("", "")
 
 
 class ZipSource(models.Model):
@@ -64,7 +68,6 @@ class ZipSource(models.Model):
     zip_filename = fields.Char()
 
     def _unzip_file(self):
-        # TODO: raise a warning if file is not set or invalid
         if self.zip_file:
             temp_zip = "/tmp/" + self.zip_filename
             clear_folder(temp_zip)
@@ -82,20 +85,20 @@ class ZipSource(models.Model):
                 tar_ref.extractall(temp_folder)
             else:
                 _logger.warning(_("Unrecognized compression file format."))
-            return temp_folder
-        return ""
+            return (temp_folder, "")
+        return ("", "")
 
 
 class Source(models.Model):
     _name = "module_install.source"
     _inherit = ["module_install.github_source", "module_install.zip_source"]
 
-    source_name = fields.Char(required=True)
-    source_type = fields.Selection(selection=[
+    name = fields.Char(required=True)
+    type = fields.Selection(selection=[
         ('G', "Github"),
         ('Z', "Zip"),
     ], string="Source type", default="G", required=True)
-    source_install_folder = fields.Char(default="/mnt/extra-addons", required=True)
+    install_folder = fields.Char(default="/mnt/extra-addons", required=True)
     search_depth = fields.Integer(default=0)
     module_ids = fields.One2many('module_install.wizard', 'source', string="Source modules")
     logs = fields.Text(default="")
@@ -114,17 +117,16 @@ class Source(models.Model):
     def get_source(self):
         for record in self:
             folder_id = ""
+            err_msg = ""
             record._check_fields()
-            if record.source_type == 'G':
-                folder_id = record._clone_repository()
-            elif record.source_type == 'Z':
-                folder_id = record._unzip_file()
+            if record.type == 'G':
+                folder_id, err_msg = record._clone_repository()
+            elif record.type == 'Z':
+                folder_id, err_msg = record._unzip_file()
             if folder_id:
                 record._find_module(path.join("/tmp", folder_id), self.search_depth)
-            else:
-                msg = _("No modules found with search level {}".format(record.search_depth))
-                record.logs = record.logs + msg + "\n"
-                _logger.warning(msg)
+            elif err_msg:
+                record.update_logs(err_msg)
                 return {
                     'type': 'ir.actions.client',
                     'tag': 'reload',
@@ -132,18 +134,17 @@ class Source(models.Model):
 
     @api.multi
     def clear_logs(self):
-        for record in self:
-            record.logs = ""
+        self.logs = ""
 
     def _check_fields(self):
-        if self.source_type == 'G':
+        if self.type == 'G':
             github_fields = ['repository_owner', 'repository_name', 'branch']
             missing_fields = [f for f in github_fields if not getattr(self, f)]
             if len(missing_fields) > 0:
                 msg = _("Missing github fields ({}) to clone modules.") \
                     .format(", ".join(missing_fields))
                 self.logs = self.logs + msg + "\n"
-        elif self.source_type == 'Z':
+        elif self.type == 'Z':
             if not self.zip_file:
                 raise UserError(_("Zip file not set to extract modules."))
 
@@ -151,7 +152,8 @@ class Source(models.Model):
         if not path.isfile(module_path):
             module_model = self.env["module_install.wizard"]
             for filename in os.listdir(module_path):
-                _logger.debug("Searching modules in {0} - depth: {1} - file: {2}".format(module_path, depth, filename))
+                _logger.debug("Searching modules in {0} - depth: {1} - file: {2}" \
+                    .format(module_path, depth, filename))
                 filepath = path.join(module_path, filename)
                 if depth > 0:
                     if not path.isfile(filepath):
@@ -169,7 +171,6 @@ class Source(models.Model):
                     records = module_model.search([
                         ('folder_path', '=', module_path),
                     ])
-                    _logger.info(str(len(records)) + _(" modules found"))
                     # TODO: Refresh all source's module list and remove unused ones
                     if len(records) == 0:
                         module_model.create(values)
@@ -178,12 +179,15 @@ class Source(models.Model):
                         records.write(values)
                     _logger.info("Module {} found".format(data["name"]))
 
+    def update_logs(self, msg):
+        logs = self.logs
+        self.logs = logs + msg + "\n"
+
     @api.multi
     def write(self, vals):
         _logger.warning(vals)
-        if 'source_type' in vals and vals['source_type'] != self.source_type:
-            msg = _("Cannot change source type after source creation")
-            self.logs = self.logs + msg + "\n"
+        if 'type' in vals and vals['type'] != self.type:
+            raise UserError(_("Cannot change source type after source creation"))
         else:
             return super(Source, self).write(vals)
 
@@ -199,7 +203,6 @@ class WizardModule(models.TransientModel):
 
     @api.multi
     def install_module(self):
-        # Checks if module tmp folder exists, regenerate its source otherwise
         for record in self:
             if not record.folder_path or not path.exists(record.folder_path) \
                 or path.isfile(record.folder_path) \
@@ -207,9 +210,9 @@ class WizardModule(models.TransientModel):
                 record.source.get_source()
                 msg = _("A problem occurred while downloading module {}, reloading source files") \
                     .format(record.name)
-                record.source.logs = record.logs + msg + "\n"
+                record.update_logs(msg)
                 _logger.error(msg)
-            dest = path.join(record.source.source_install_folder, record.name)
+            dest = path.join(record.source.install_folder, record.name)
             # TODO: CLeaner and more specific user error handling
             try:
                 clear_folder(dest)
@@ -218,7 +221,7 @@ class WizardModule(models.TransientModel):
                 _logger.info(msg)
             except Exception as e:
                 _logger.exception(e)
-                record.source.logs = record.source.logs + str(e) + "\n"
+                record.source.update_logs(str(e))
                 return {
                     'type': 'ir.actions.client',
                     'tag': 'reload',
