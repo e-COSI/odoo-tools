@@ -25,7 +25,13 @@ def clear_folder(folder_path):
 class GithubSource(models.Model):
     _name = "module_install.github_source"
 
-    token = fields.Char(default="")
+    def _fetch_github_token(self):
+        key = "GITHUB_TOKEN"
+        if key in os.environ:
+            return os.environ[key]
+        return ""
+
+    token = fields.Char(default=_fetch_github_token)
     repository_owner = fields.Char()
     repository_name = fields.Char()
     branch = fields.Char(default="master")
@@ -143,7 +149,7 @@ class Source(models.Model):
             if len(missing_fields) > 0:
                 msg = _("Missing github fields ({}) to clone modules.") \
                     .format(", ".join(missing_fields))
-                self.logs = self.logs + msg + "\n"
+                self.update_logs(msg)
         elif self.type == 'Z':
             if not self.zip_file:
                 raise UserError(_("Zip file not set to extract modules."))
