@@ -9,7 +9,7 @@
        This module is a wrapper to search for relations and dependencies of modules and models
        within Odoo. It is a adapter of the OERPLib inspection tools to integrate it within the
        newer OdooRPC library and use its features with Odoo 10.
-       OdooRPC must be installed on the server before using this module.
+       OdooRPC and pydot must be installed on the server before using this module.
     """,
 
     'author': "odoo@e-cosi.com",
@@ -31,4 +31,8 @@
     # only loaded in demonstration mode
     'demo': [
     ],
+
+    'external_dependencies': {
+        'python': ['odoorpc', 'pydot']
+    }
 }

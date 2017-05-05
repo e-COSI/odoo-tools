@@ -4,8 +4,12 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 
 import logging
-import odoorpc, inspect
 import base64
+try:
+    import odoorpc
+    import inspect
+except ImportError:
+    pass
 
 
 _logger = logging.getLogger(__name__)
