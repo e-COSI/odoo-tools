@@ -63,7 +63,6 @@ class BackupOdoo(object):
         elif extension == "yaml":
             with open(self.args.config, 'r') as data_file:
                 self.data = yaml.load(data_file)
-                print self.data
         else:
             self.parser.error("Invalid config file extension: %s" % extension)
         if not self.args.postgres:
@@ -115,31 +114,21 @@ class BackupOdoo(object):
         for backup in self.data["backups"]:
             pg = backup["postgresql"]
             if pg:
-                src = backup["source"]
                 url = pg["user"] + "@" + pg["host"]
                 for name in [n for n in backup["db_names"] if n not in filter_db]:
-                    db_path = path.join(self.data["backup_root"] + "db", src)
+                    db_path = path.join(self.data["backup_root"] + "db", backup["source"])
                     try:
                         if not path.exists(db_path):
                             os.makedirs(db_path)
                         pg_dumps = sorted(os.listdir(db_path))
                         msg = "Dumps available for {0}: {1}".format(name, pg_dumps)
                         _logger.debug(msg)
-                        db_path = path.join(self.data["backup_root"] + "db", src)
                         cmd = ""
                         if self.args.restore:
-                            # Check if there is at least one file to restore
-                            if len(pg_dumps) == 0:
-                                _logger.error("No postgres dump available to restore " + name)
-                                continue
-                            _logger.info("Restoring databases...")
-                            # Select most recent available postgres dump to restore it
-                            dump_id = pg_dumps[-1]
                             cmd = self._format_postgres_restore(
-                                url, name, db_path, dump_id, pg["password"]
+                                url, name, db_path, pg_dumps, pg["password"]
                             )
                         else:
-                            _logger.info("Backing up databases...")
                             cmd = self._format_postgres_dump(
                                 url, name, db_path, pg_dumps, pg["password"]
                             )
@@ -185,6 +174,7 @@ class BackupOdoo(object):
         """
         Helper method used to create formated command line used to dump postgres database.
         """
+        _logger.info("Backing up databases...")
         # Create pg database dump with timestamp id name
         dump_id = "{0}_{1}.gz".format(database, int(time()))
         # Filter the 4 oldest database dumps
@@ -201,20 +191,28 @@ class BackupOdoo(object):
             password=pwd
         )
 
-    def _format_postgres_restore(self, url, database, db_path, dump_id, pwd):
+    def _format_postgres_restore(self, url, database, db_path, pg_dumps, pwd):
         """
         Helper method used to create formated command line used to restore postgres database.
         """
-        return """
-        scp {local_file} {source_url}:{temp_file} &&
-        ssh {source_url} PGPASSWORD={password} pg_restore -d {db_name} {temp_file}
-        """.format(
-            local_file=path.join(db_path, dump_id),
-            temp_file="/tmp/" + dump_id,
-            source_url=url,
-            db_name=database,
-            password=pwd
-        )
+        # Check if there is at least one file to restore
+        if len(pg_dumps) == 0:
+            _logger.error("No postgres dump available to restore " + database)
+        else:
+            _logger.info("Restoring databases...")
+            # Select most recent available postgres dump to restore it
+            dump_id = pg_dumps[-1]
+
+            return """
+            scp {local_file} {source_url}:{temp_file} &&
+            ssh {source_url} PGPASSWORD={password} pg_restore -d {db_name} {temp_file}
+            """.format(
+                local_file=path.join(db_path, dump_id),
+                temp_file="/tmp/" + dump_id,
+                source_url=url,
+                db_name=database,
+                password=pwd
+            )
 
 try:
     backup_handler = BackupOdoo()
