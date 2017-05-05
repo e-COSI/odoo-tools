@@ -1,10 +1,18 @@
 {
-    "backup_root": "/home/vagrant/backup/",
-    "conf_path": "/home/vagrant/test.conf",
-    "databases": [
+    "backup_root": "/mnt/Backup/",
+    "rsnaphot_generated_conf": "/home/scamadmin/backup-tools/rsnaphot.conf",
+    "backups": [
         {
-            "base_url": "vagrant@192.168.50.4",
-            "filestore_path": "/home/vagrant/.local/share/Odoo/filestore/",
+            "filestore": {
+                "host": "192.168.50.4",
+                "user": "vagrant",
+                "path": "/home/vagrant/.local/share/Odoo/filestore/"
+            },
+            "postgresql": {
+                "host": "192.168.50.4",
+                "user": "vagrant",
+                "password": "vagrant"
+            },
             "db_names": ["testBase"],
             "source": "odoo_backup/"
         }
