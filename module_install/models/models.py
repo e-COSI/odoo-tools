@@ -72,7 +72,6 @@ class ZipSource(models.Model):
 
     zip_file = fields.Binary()
     zip_filename = fields.Char()
-
     def _unzip_file(self):
         if self.zip_file:
             temp_zip = "/tmp/" + self.zip_filename
@@ -139,6 +138,13 @@ class Source(models.Model):
                 }
 
     @api.multi
+    def reset_source(self):
+        for source in self:
+            for mod in source.module_ids:
+                clear_folder(mod.folder_path)
+                mod.unlink()
+
+    @api.multi
     def clear_logs(self):
         self.logs = ""
 
@@ -200,6 +206,7 @@ class Source(models.Model):
 
 class WizardModule(models.TransientModel):
     _name = "module_install.wizard"
+    _order = "name"
 
     source = fields.Many2one("module_install.source", required=True, ondelete='cascade')
     name = fields.Char()

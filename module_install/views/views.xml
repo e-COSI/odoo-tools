@@ -37,8 +37,10 @@
                                 <field name="repository_owner" />
                                 <field name="repository_name" />
                                 <field name="branch" />
-                                <button string="Clone Modules" type="object" name="get_source"
+                                <button string="Clone repository" type="object" name="get_source"
                                 class="oe_read_only oe_start_button" icon="fa-github" />
+                                <button string="Reset source" type="object" name="reset_source"
+                                class="oe_read_only oe_start_button" icon="fa-trash-o" />
                             </group>
                             <group attrs="{'invisible': [('type', '!=', 'Z')]}">
                                 <field name="zip_filename" invisible="1" />
