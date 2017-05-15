@@ -87,7 +87,8 @@
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
         </record>
-        <menuitem id="main_module_install_menu" name="Install Module" />
+        <menuitem id="main_module_install_menu" name="Install Module"
+            web_icon="module_install,static/description/icon.png" />
         <menuitem id="module_install_menu" name="Install Module"
             parent="main_module_install_menu" />
         <menuitem id="source_menu" name="Source"
