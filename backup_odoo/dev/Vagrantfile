@@ -16,6 +16,10 @@ Vagrant.configure("2") do |config|
 
     # Kill Odoo server instance launched by default each time the VM is booted
     odoo.vm.provision "shell", run: "always", inline: "kill `ps aux | awk '/odoo-bin/ {print $2}' | head -n1`"
+
+    odoo.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--memory", 2048]
+    end
   end
 
   config.vm.define :snapshot do |snapshot|
