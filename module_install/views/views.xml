@@ -51,7 +51,15 @@
                         </group>
                         <notebook>
                             <page string="Source Modules">
-                                <field name="module_ids" />
+                                <field name="module_ids" widget="x2many_selectable">
+                                    <tree create="false" edit="false">
+                                        <field name="name"/>
+                                        <field name="description"/>
+                                        <field name="version" />
+                                        <button string="Install module" type="object" name="install_module"
+                                                class="oe_read_only oe_start_button" icon="fa-tasks" />
+                                    </tree>
+                                </field>
                             </page>
                             <page string="Informations">
                                 <group>
@@ -66,7 +74,7 @@
             </field>
         </record>
 
-        <record model="ir.ui.view" id="module_install_wizard_list">
+        <!--record model="ir.ui.view" id="module_install_wizard_list">
             <field name="name">module_install.wizard.list</field>
             <field name="model">module_install.wizard</field>
             <field name="arch" type="xml">
@@ -78,7 +86,7 @@
                             class="oe_read_only oe_start_button" icon="fa-tasks" />
                 </tree>
             </field>
-        </record>
+        </record-->
 
         <!-- Module main menu enty and treeview -->
         <record model="ir.actions.act_window" id="module_install_action">
