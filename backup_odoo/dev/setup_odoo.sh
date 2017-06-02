@@ -24,5 +24,14 @@ BASH_CONFIG
 <<COMMENT
 sudo su postgres
 createuser -sPE vagrant
-PG_CONFIG
+
+If remote postresql-client cannot connect to local psql-server
+    -> ERROR (Is the server running on host "xx.xx.xx.xx" and accepting TCP/IP connections on port 5432?)
+
+    => Edit /etc/postgresql/{version}/main/postgresql.conf
+        listen_addresses = '*'
+
+    => Edit /etc/postgresql/{version}/main/pg_hba.conf
+        host    all             all             192.168.1.0/24          md5
+
 COMMENT
