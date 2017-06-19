@@ -20,16 +20,17 @@
     'version': '1.2.0',
 
     # any module necessary for this one to work correctly
-    'depends': ['web_x2many_selectable',],
+    'depends': ['base', 'web'],
 
     # always loaded
     'data': [
         'views/views.xml',
+        'views/web_assets.xml',
 
         'data/source_data.xml',
     ],
-    # only loaded in demonstration mode
-    'demo': [
-    ],
 
+    "qweb":[
+        'static/src/xml/widget_view.xml',
+    ],
 }

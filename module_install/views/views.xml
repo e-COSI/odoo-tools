@@ -37,29 +37,29 @@
                                 <field name="repository_owner" />
                                 <field name="repository_name" />
                                 <field name="branch" />
-                                <button string="Clone repository" type="object" name="get_source"
-                                class="oe_read_only oe_start_button" icon="fa-github" />
+                                <button string="Clone Modules" type="object" name="get_source"
+                                    class="oe_read_only oe_start_button" icon="fa-github" />
                                 <button string="Reset source" type="object" name="reset_source"
-                                class="oe_read_only oe_start_button" icon="fa-trash-o" />
+                                    class="oe_read_only oe_start_button" icon="fa-trash-o" />
                             </group>
                             <group attrs="{'invisible': [('type', '!=', 'Z')]}">
                                 <field name="zip_filename" invisible="1" />
                                 <field name="zip_file" filename="zip_filename" />
                                 <button string="Unzip Modules" type="object" name="get_source"
-                                class="oe_read_only oe_start_button" icon="fa-file-archive-o" />
+                                    class="oe_read_only oe_start_button" icon="fa-file-archive-o" />
                             </group>
                         </group>
                         <notebook>
                             <page string="Source Modules">
-                                <field name="module_ids" widget="x2many_selectable">
-                                    <tree create="false" edit="false">
-                                        <field name="name"/>
-                                        <field name="description"/>
-                                        <field name="version" />
-                                        <button string="Install module" type="object" name="install_module"
-                                                class="oe_read_only oe_start_button" icon="fa-tasks" />
-                                    </tree>
-                                </field>
+                              <field name="module_ids" widget="x2many_selectable">
+                                  <tree create="false" edit="false">
+                                      <field name="name"/>
+                                      <field name="description"/>
+                                      <field name="version" />
+                                      <button string="Install module" type="object" name="install_module"
+                                              class="oe_read_only oe_start_button" icon="fa-download" />
+                                  </tree>
+                              </field>
                             </page>
                             <page string="Informations">
                                 <group>
@@ -74,7 +74,7 @@
             </field>
         </record>
 
-        <!--record model="ir.ui.view" id="module_install_wizard_list">
+        <record model="ir.ui.view" id="module_install_wizard_list">
             <field name="name">module_install.wizard.list</field>
             <field name="model">module_install.wizard</field>
             <field name="arch" type="xml">
@@ -86,7 +86,7 @@
                             class="oe_read_only oe_start_button" icon="fa-tasks" />
                 </tree>
             </field>
-        </record-->
+        </record>
 
         <!-- Module main menu enty and treeview -->
         <record model="ir.actions.act_window" id="module_install_action">
@@ -95,8 +95,7 @@
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
         </record>
-        <menuitem id="main_module_install_menu" name="Install Module"
-            web_icon="module_install,static/description/icon.png" />
+        <menuitem id="main_module_install_menu" name="Install Module" />
         <menuitem id="module_install_menu" name="Install Module"
             parent="main_module_install_menu" />
         <menuitem id="source_menu" name="Source"

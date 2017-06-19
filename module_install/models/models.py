@@ -72,6 +72,7 @@ class ZipSource(models.Model):
 
     zip_file = fields.Binary()
     zip_filename = fields.Char()
+
     def _unzip_file(self):
         if self.zip_file:
             temp_zip = "/tmp/" + self.zip_filename
@@ -178,7 +179,7 @@ class Source(models.Model):
                         'name': path.basename(module_path),
                         'description': data['name'],
                         'version': data['version'],
-                        'folder_path': module_path
+                        'folder_path': module_path,
                     }
                     records = module_model.search([
                         ('folder_path', '=', module_path),
@@ -189,11 +190,12 @@ class Source(models.Model):
                     else:
                         records.ensure_one()
                         records.write(values)
-                    _logger.info("Module {} found".format(data["name"]))
+                    log_msg = "Module {} found".format(data["name"])
+                    _logger.info(log_msg)
 
     def update_logs(self, msg):
         logs = self.logs
-        self.logs = logs + msg + "\n"
+        self.logs = logs + msg + "\n" if logs else msg + "\n"
 
     @api.multi
     def write(self, vals):
@@ -215,7 +217,12 @@ class WizardModule(models.TransientModel):
     folder_path = fields.Char()
 
     @api.multi
+    def call_from_js(self):
+        self.install_module()
+ 
+    @api.multi
     def install_module(self):
+        modules = []
         for record in self:
             if not record.folder_path or not path.exists(record.folder_path) \
                 or path.isfile(record.folder_path) \
@@ -230,12 +237,23 @@ class WizardModule(models.TransientModel):
             try:
                 clear_folder(dest)
                 copytree(record.folder_path, dest)
-                msg = _("Module {0} succesfulled copied to {1}").format(record.name, dest)
-                _logger.info(msg)
+                modules.append(record.name + _(" successfully installed"))
             except Exception as e:
                 _logger.exception(e)
-                record.source.update_logs(str(e))
-                return {
-                    'type': 'ir.actions.client',
-                    'tag': 'reload',
-                }
+                return (1, str(e))
+        _logger.warning(modules)
+        return (0, modules)
+
+    @api.multi
+    def check_module(self):
+        states = []
+        for record in self:
+            dest = path.join(record.source.install_folder, record.name, "__manifest__.py")
+            try:
+                datafile = open(dest, 'r').read()
+                data = literal_eval(datafile)
+                _logger.warning(data)
+                states.append((data['version'], record.name))
+            except:
+                states.append((0, record.name))
+        return states
