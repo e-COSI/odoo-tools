@@ -49,20 +49,20 @@ odoo.define('web_x2many_selectable.form_widgets', function (require) {
             if (data[0] == 0) {
                 this.do_notify(data[1].join("\n"));
             } else {
-                this.do_warn(data[1]);
+                this.do_warn(_t("Error"), data[1]);
             }
 
         },
         check_install: function(data) {
-            this.do_warn("Form", "The record could not be found in the database.", true);
             for (var i = 0; i < data.length; i++) {
                 var elm = data[i];
 
                 if (elm[0] == 0) {
-                    this.do_warn(elm[1] + _t(" is not available yet"))
+                    this.do_warn(_t("Error"), elm[1] + _t(" is not available yet"))
                 } else {
                     this.do_notify(
-                        elm[1] + _t(" available [" + elm[0].toString() + "]")
+                        _t("Current version: [") + elm[0].toString() + "]",
+                        elm[1] + _t(" available")
                     )
                 }
             }
