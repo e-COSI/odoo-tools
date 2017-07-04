@@ -1,6 +1,6 @@
 {
     "backup_root": "/mnt/Backup/",
-    "rsnaphot_generated_conf": "/home/scamadmin/backup-tools/rsnaphot.conf",
+    "rsnaphot_generated_conf": "/home/vagrant/rsnaphot.conf",
     "backups": [
         {
             "filestore": {

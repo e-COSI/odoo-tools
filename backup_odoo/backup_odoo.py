@@ -11,7 +11,7 @@ from time import time
 
 logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger("BACKUP_TOOL")
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
 
 class BackupOdooParser(argparse.ArgumentParser):
@@ -125,13 +125,9 @@ class BackupOdoo(object):
                         _logger.debug(msg)
                         cmd = ""
                         if self.args.restore:
-                            cmd = self._format_postgres_restore(
-                                url, name, db_path, pg_dumps, pg["password"]
-                            )
+                            cmd = self._format_postgres_restore(url, name, db_path, pg_dumps, pg)
                         else:
-                            cmd = self._format_postgres_dump(
-                                url, name, db_path, pg_dumps, pg["password"]
-                            )
+                            cmd = self._format_postgres_dump(url, name, db_path, pg_dumps, pg)
                         _logger.debug("Running command: " + cmd)
                         os.system(cmd)
                     except Exception as e:
@@ -170,13 +166,13 @@ class BackupOdoo(object):
                 _logger.info("Configuration file written to: " + conf_file)
             return "rsnapshot -c {} hourly".format(conf_file)
 
-    def _format_postgres_dump(self, url, database, db_path, pg_dumps, pwd):
+    def _format_postgres_dump(self, url, database, db_path, pg_dumps, pg):
         """
         Helper method used to create formated command line used to dump postgres database.
         """
         _logger.info("Backing up databases...")
         # Create pg database dump with timestamp id name
-        dump_id = "{0}_{1}.gz".format(database, int(time()))
+        dump_id = "{0}_{1}.dump".format(database, int(time()))
         # Filter the 4 oldest database dumps
         old_dumps = pg_dumps[:-4]
         msg = "Old pg dumps to remove: {}".format(old_dumps)
@@ -184,14 +180,18 @@ class BackupOdoo(object):
         for d in old_dumps:
             os.remove(path.join(db_path, d))
         # Dump database to output and compress it before saving it
-        return "ssh {source_url} PGPASSWORD={password} pg_dump -Fc {db_name} > {dest_file}".format(
+        return """
+        PGPASSWORD={password} pg_dump -U {user} -h {host} -d {db_name} -f {dest_file} -Fc
+        """.format(
             source_url=url,
             db_name=database,
             dest_file=path.join(db_path, dump_id),
-            password=pwd
+            password=pg["password"],
+            user=pg["user"],
+            host=pg["host"]
         )
 
-    def _format_postgres_restore(self, url, database, db_path, pg_dumps, pwd):
+    def _format_postgres_restore(self, url, database, db_path, pg_dumps, pg):
         """
         Helper method used to create formated command line used to restore postgres database.
         """
@@ -201,17 +201,18 @@ class BackupOdoo(object):
         else:
             _logger.info("Restoring databases...")
             # Select most recent available postgres dump to restore it
-            dump_id = pg_dumps[-1]
+            dump_file = path.join(db_path, pg_dumps[-1])
 
             return """
-            scp {local_file} {source_url}:{temp_file} &&
-            ssh {source_url} PGPASSWORD={password} pg_restore -d {db_name} {temp_file}
+            PGPASSWORD={password} createdb -U {user} -h {host} {db_name}
+            PGPASSWORD={password} pg_restore -U {user} -h {host} -d {db_name} {local_file}
             """.format(
-                local_file=path.join(db_path, dump_id),
-                temp_file="/tmp/" + dump_id,
+                local_file=dump_file,
                 source_url=url,
                 db_name=database,
-                password=pwd
+                password=pg["password"],
+                user=pg["user"],
+                host=pg["host"]
             )
 
 try:
