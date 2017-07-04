@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "module_install",
+    'name': "e-COSI Module Install",
 
     'summary': """
         Install tool use to fetch modules available via Github or SFTP and can also upload zipped module sources.
@@ -16,20 +16,21 @@
     # Categories can be used to filter modules in modules listing
     # Check https://github.com/odoo/odoo/blob/master/openerp/addons/base/module/module_data.xml
     # for the full list
-    'category': 'tools',
-    'version': '0.2.0',
+    'category': 'Tools',
+    'version': '1.2.0',
 
     # any module necessary for this one to work correctly
-    'depends': ['base'],
+    'depends': ['base', 'web'],
 
     # always loaded
     'data': [
         'views/views.xml',
+        'views/web_assets.xml',
 
         'data/source_data.xml',
     ],
-    # only loaded in demonstration mode
-    'demo': [
-    ],
 
+    "qweb":[
+        'static/src/xml/widget_view.xml',
+    ],
 }
