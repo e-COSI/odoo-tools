@@ -1,0 +1,94 @@
+<odoo>
+  <data>
+
+    <!-- Inspect Odoo Form View -->
+    <record model="ir.ui.view" id="odoo_inspect_view">
+      <field name="name">odoo_inspect.view</field>
+      <field name="model">odoo.inspect</field>
+      <field name="arch" type="xml">
+        <form>
+          <sheet>
+             <h1><field name="name"/></h1>
+            <notebook>
+              <page string="Inspect Configuration">
+                <group>
+                  <group string="Connection">
+                    <field name="host"/>
+                    <field name="port"/>
+                    <field name="database"/>
+                    <field name="username"/>
+                    <field name="password" password="True"/>
+                  </group>
+                  <group string="Graph">
+                    <field name="inspect_mode"/>
+                    <field name="graph_type"/>
+                    <field name="graph_filename" invisible="1"/>
+                    <field name="graph" filename="graph_filename"/>
+                  </group>
+                </group>
+              </page>
+              <page string="Search Parameters">
+                <group>
+                  <group>
+                    <field name="model_list"/>
+                    <field name="max_depth"
+                    attrs="{'invisible': [('inspect_mode', '!=', 'rel')]}"/>
+                    <field name="restrict"
+                    attrs="{'invisible': [('inspect_mode', '!=', 'rel')]}"/>
+                  </group>
+                  <group>
+                    <field name="white_list"/>
+                    <field name="black_list"/>
+                    <field name="attrs_white_list"
+                    attrs="{'invisible': [('inspect_mode', '!=', 'rel')]}"/>
+                    <field name="attrs_black_list"
+                    attrs="{'invisible': [('inspect_mode', '!=', 'rel')]}"/>
+                  </group>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <!-- Inspect Odoo Server Action -->
+    <record id="server_action_odoo_inspect" model="ir.actions.server">
+        <field name="name">Inspect Odoo</field>
+        <!--
+        To declare a server action model_id field mus be specified, containing
+        technical name of the module containing the model and with the reference id
+        of the record model: model_{#model_name} where model_name gets all dots
+        replaced by underscores.
+        -->
+        <field name="model_id" ref="odoo_inspect.model_odoo_inspect"/>
+        <field name="state">code</field>
+        <field name="code">
+            action = model.browse(context['active_ids']).inspect()
+        </field>
+    </record>
+
+    <record model="ir.values" id="odoo_inspect_values">
+        <field name="name">Inspect Odoo</field>
+        <field name="key2">client_action_multi</field>
+        <field name="value" eval="'ir.actions.server,' +str(ref('server_action_odoo_inspect'))" />
+        <field name="key">action</field>
+        <field name="model">odoo.inspect</field>
+    </record>
+
+
+    <!-- Module main menu enty and treeview -->
+    <record model="ir.actions.act_window" id="odoo_inspect_action">
+        <field name="name">Inspections</field>
+        <field name="res_model">odoo.inspect</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <menuitem id="main_odoo_inspect_menu" name="Inspect Odoo" />
+    <menuitem id="odoo_inspect_menu" name="Inspect Odoo"
+        parent="main_odoo_inspect_menu" />
+    <menuitem id="inspect_menu" name="Inspect"
+        parent="odoo_inspect_menu" action="odoo_inspect_action" />
+
+  </data>
+</odoo>
