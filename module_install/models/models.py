@@ -237,6 +237,8 @@ class WizardModule(models.TransientModel):
             try:
                 clear_folder(dest)
                 copytree(record.folder_path, dest)
+                cmd = "chmod 777 -R %s" % dest
+                process = subprocess.Popen(cmd.split(" "), stderr=subprocess.PIPE)
                 modules.append(record.name + _(" successfully installed"))
             except Exception as e:
                 _logger.exception(e)
