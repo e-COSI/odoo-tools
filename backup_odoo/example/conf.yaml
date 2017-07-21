@@ -1,0 +1,16 @@
+backup_root: "/mnt/Backup/"
+rsnaphot_generated_conf: "/home/vagrant/rsnaphot.conf"
+backups:
+    -
+        filestore:
+            host: "192.168.50.4"
+            user: "vagrant"
+            path: "/home/vagrant/.local/share/Odoo/filestore/"
+        postgresql: 
+            host: "192.168.50.4"
+            user: "vagrant"
+            password: "vagrant"
+        db_names:
+            -
+                "testBase"
+        source: "odoo_backup/"

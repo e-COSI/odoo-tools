@@ -3,13 +3,15 @@
 from sys import argv
 from os import path
 import os, sys, io
-import logging, json, argparse
+import logging
+import json, yaml
+import argparse
 
 from time import time
 
 logging.basicConfig(level=logging.INFO)
-_logger = logging.getLogger("SNAPSHOT_CONF")
-VERSION = "1.0.0"
+_logger = logging.getLogger("BACKUP_TOOL")
+VERSION = "1.0.2"
 
 
 class BackupOdooParser(argparse.ArgumentParser):
@@ -54,12 +56,19 @@ class BackupOdoo(object):
             self.parser.error("argument --config/-c is required")
         if self.args.filestore and self.args.postgres:
             self.parser.error("cannot specify filesore and postgres arguments at the same time")
-        with open(self.args.config, 'r') as data_file:
-            self.data = json.load(data_file)
-            if not self.args.postgres:
-                self.handle_filestore()
-            if not self.args.filestore:
-                self.handle_database()
+        extension = self.args.config.split(".")[-1]
+        if extension == "json":
+            with open(self.args.config, 'r') as data_file:
+                self.data = json.load(data_file)
+        elif extension == "yaml":
+            with open(self.args.config, 'r') as data_file:
+                self.data = yaml.load(data_file)
+        else:
+            self.parser.error("Invalid config file extension: %s" % extension)
+        if not self.args.postgres:
+            self.handle_filestore()
+        if not self.args.filestore:
+            self.handle_database()
 
     def handle_filestore(self):
         """
@@ -69,16 +78,21 @@ class BackupOdoo(object):
         """
         backup_lines = []
         filter_db = self.args.databases.split(",") if self.args.databases else []
-        for db in self.data["databases"]:
-            for name in [n for n in db["db_names"] if n not in filter_db]:
-                fs_path = path.join(db["filestore_path"], name)
-                line = ""
-                if self.args.restore:
-                    line = self._prepare_restore_command_line(db, name)
-                else:
-                    # Format filestore backup line for snapshot config file
-                    line = "backup {0}:{1} {2}".format(db["base_url"], fs_path, db["source"])
-                backup_lines.append(line)
+        for backup in self.data["backups"]:
+            fs = backup["filestore"]
+            if fs:
+                for name in [n for n in backup["db_names"] if n not in filter_db]:
+                    fs_path = path.join(fs["path"], name)
+                    url = fs["user"] + "@" + fs["host"]
+                    line = ""
+                    if self.args.restore:
+                        line = self._prepare_restore_command_line(fs, url, name, backup["source"])
+                    else:
+                        # Format filestore backup line for snapshot config file
+                        line = "backup {0}:{1} {2}".format(url, fs_path, backup["source"])
+                    backup_lines.append(line)
+            else:
+                _logger.warning("No filestore configuration defined for source: " + backup["source"])
         try:
             if self.args.restore:
                 _logger.info("Restoring filestore...")
@@ -97,46 +111,42 @@ class BackupOdoo(object):
         saved local dump to remove database or to create new backup of remote database.
         """
         filter_db = self.args.databases.split(",") if self.args.databases else []
-        for db in self.data["databases"]:
-            for name in [n for n in db["db_names"] if n not in filter_db]:
-                db_path = path.join(self.data["backup_root"] + "db", db["source"])
-                try:
-                    if not path.exists(db_path):
-                        os.makedirs(db_path)
-                    pg_dumps = sorted(os.listdir(db_path))
-                    msg = "Dumps available for {0}: {1}".format(name, pg_dumps)
-                    _logger.debug(msg)
-                    db_path = path.join(self.data["backup_root"] + "db", db["source"])
-                    cmd = ""
-                    if self.args.restore:
-                        # Check if there is at least one file to restore
-                        if len(pg_dumps) == 0:
-                            _logger.error("No postgres dump available to restore " + name)
-                            continue
-                        _logger.info("Restoring databases...")
-                        # Select most recent available postgres dump to restore it
-                        dump_id = pg_dumps[-1]
-                        cmd = self._format_postgres_restore(db["base_url"], name, db_path, dump_id)
-                    else:
-                        _logger.info("Backing up databases...")
-                        cmd = self._format_postgres_dump(db["base_url"], name, db_path, pg_dumps)
-                    _logger.debug("Running command: " + cmd)
-                    os.system(cmd)
-                except Exception as e:
-                    _logger.exception(e)
+        for backup in self.data["backups"]:
+            pg = backup["postgresql"]
+            if pg:
+                url = pg["user"] + "@" + pg["host"]
+                for name in [n for n in backup["db_names"] if n not in filter_db]:
+                    db_path = path.join(self.data["backup_root"] + "db", backup["source"])
+                    try:
+                        if not path.exists(db_path):
+                            os.makedirs(db_path)
+                        pg_dumps = sorted(os.listdir(db_path))
+                        msg = "Dumps available for {0}: {1}".format(name, pg_dumps)
+                        _logger.debug(msg)
+                        cmd = ""
+                        if self.args.restore:
+                            cmd = self._format_postgres_restore(url, name, db_path, pg_dumps, pg)
+                        else:
+                            cmd = self._format_postgres_dump(url, name, db_path, pg_dumps, pg)
+                        _logger.debug("Running command: " + cmd)
+                        os.system(cmd)
+                    except Exception as e:
+                        _logger.exception(e)
+            else:
+                _logger.warning("No postgres configuration defined for source: " + backup["source"])
 
-    def _prepare_restore_command_line(self, db, name):
+    def _prepare_restore_command_line(self, fs, url, name, source):
         """
         Helper method used to create formated command line used to restore remote filestore
         using rsync.
         """
-        fs_path = db["filestore_path"] + name + "/"
+        fs_path = fs["path"] + name + "/"
         backup_path = "{0}filestore/hourly.0/{1}" \
-            .format(self.data["backup_root"], db["source"])
+            .format(self.data["backup_root"], source)
         return "rsync -av {local_path}{filestore} {source_url}:{filestore}".format(
             filestore=fs_path,
             local_path=backup_path,
-            source_url=db["base_url"]
+            source_url=url
         )
 
     def _generate_snapshot_command(self, backup_lines):
@@ -144,7 +154,7 @@ class BackupOdoo(object):
         Helper method used to create formatted rsnapshot config file used to backup remote
         Odoo filestore.
         """
-        conf_file = self.data["conf_path"]
+        conf_file = self.data["rsnaphot_generated_conf"]
         with open("rsnapshot/template.conf", 'r') as conf:
             file_content = conf.read().format(
                 root=self.data["backup_root"] + "filestore/",
@@ -156,12 +166,13 @@ class BackupOdoo(object):
                 _logger.info("Configuration file written to: " + conf_file)
             return "rsnapshot -c {} hourly".format(conf_file)
 
-    def _format_postgres_dump(self, url, database, db_path, pg_dumps):
+    def _format_postgres_dump(self, url, database, db_path, pg_dumps, pg):
         """
         Helper method used to create formated command line used to dump postgres database.
         """
+        _logger.info("Backing up databases...")
         # Create pg database dump with timestamp id name
-        dump_id = "{0}_{1}.gz".format(database, int(time()))
+        dump_id = "{0}_{1}.dump".format(database, int(time()))
         # Filter the 4 oldest database dumps
         old_dumps = pg_dumps[:-4]
         msg = "Old pg dumps to remove: {}".format(old_dumps)
@@ -169,28 +180,40 @@ class BackupOdoo(object):
         for d in old_dumps:
             os.remove(path.join(db_path, d))
         # Dump database to output and compress it before saving it
-        return "ssh {source_url} pg_dump {db_name} | gzip > {dest_file}".format(
+        return """
+        PGPASSWORD={password} pg_dump -U {user} -h {host} -d {db_name} -f {dest_file} -Fc
+        """.format(
             source_url=url,
             db_name=database,
-            dest_file=path.join(db_path, dump_id)
+            dest_file=path.join(db_path, dump_id),
+            password=pg["password"],
+            user=pg["user"],
+            host=pg["host"]
         )
 
-    def _format_postgres_restore(self, url, database, db_path, dump_id):
+    def _format_postgres_restore(self, url, database, db_path, pg_dumps, pg):
         """
         Helper method used to create formated command line used to restore postgres database.
         """
-        return """
-        ssh {source_url} dropdb {db_name}
-        scp {local_file} {source_url}:{temp_file} &&
-        ssh {source_url} createdb {db_name} &&
-        #ssh {source_url} 'psql {db_name} < {temp_file}'
-        ssh {source_url} 'gunzip -c {temp_file} | psql {db_name} > /dev/null'
-        """.format(
-            local_file=path.join(db_path, dump_id),
-            temp_file="/tmp/" + dump_id,
-            source_url=url,
-            db_name=database
-        )
+        # Check if there is at least one file to restore
+        if len(pg_dumps) == 0:
+            _logger.error("No postgres dump available to restore " + database)
+        else:
+            _logger.info("Restoring databases...")
+            # Select most recent available postgres dump to restore it
+            dump_file = path.join(db_path, pg_dumps[-1])
+
+            return """
+            PGPASSWORD={password} createdb -U {user} -h {host} {db_name}
+            PGPASSWORD={password} pg_restore -U {user} -h {host} -d {db_name} {local_file}
+            """.format(
+                local_file=dump_file,
+                source_url=url,
+                db_name=database,
+                password=pg["password"],
+                user=pg["user"],
+                host=pg["host"]
+            )
 
 try:
     backup_handler = BackupOdoo()
