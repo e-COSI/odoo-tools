@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="X2ManySelectable">
+        <div>
+	        <button class="btn btn-confirm btn-primary ep_button_confirm" href="javascript:void(0)">Install</button>
+	        <button class="btn btn-confirm btn-primary ep_button_check" href="javascript:void(0)">Check</button>
+        </div>
+    </t>
+
+</templates>

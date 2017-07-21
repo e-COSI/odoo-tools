@@ -11,6 +11,16 @@
 		<field name="branch">10.0</field>
 	</record>
 
+	<record model="module_install.source" id="source_naotic">
+		<field name="name">Naotic</field>
+		<field name="type">G</field>
+		<field name="search_depth">1</field>
+
+		<field name="repository_owner">e-COSI</field>
+		<field name="repository_name">naotic-odoo</field>
+		<field name="branch">10.0</field>
+	</record>
+
 	<record model="module_install.source" id="source_saas">
 		<field name="name">SaaS Addons sources</field>
 		<field name="type">G</field>
